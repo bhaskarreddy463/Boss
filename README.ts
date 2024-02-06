@@ -42,3 +42,6 @@ private formatLevels(level: Map<string, MyNode>): GSH {
 
   return gsh;
 }
+
+https://gitlab.aws.site.gs.com/wf/mwp-ui/gs-ux-uitoolkit/-/blob/master/components/popover/angular/src/popover.directive.ts
+
