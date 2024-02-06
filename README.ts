@@ -45,3 +45,286 @@ private formatLevels(level: Map<string, MyNode>): GSH {
 
 https://gitlab.aws.site.gs.com/wf/mwp-ui/gs-ux-uitoolkit/-/blob/master/components/popover/angular/src/popover.directive.ts
 
+import {
+    Directive,
+    Input,
+    AfterViewInit,
+    ComponentRef,
+    ElementRef,
+    TemplateRef,
+    NgZone,
+    Output,
+    EventEmitter,
+    Renderer2,
+    ApplicationRef,
+    ChangeDetectorRef,
+    ComponentFactoryResolver,
+    Injector,
+} from '@angular/core';
+import tippy, { Props, Instance } from 'tippy.js';
+import {
+    type PopoverProps,
+    popoverStyleSheet,
+    PopoverCssClasses,
+    getPopoverRootClasses,
+} from './common-src';
+import {
+    GsPopoverInputs,
+    createTippyOptions,
+    addClasses,
+    tippyStyleSheet,
+    TippyCssClasses,
+} from './common-base-src';
+import { ThemeService } from '@gs-ux-uitoolkit-angular/theme';
+import { Subscription } from 'rxjs';
+import { IconComponent } from '@gs-ux-uitoolkit-angular/icon-font';
+import { PopoverContentComponent } from './popover-content.component';
+import { componentAnalytics } from './analytics-tracking';
+import { uniqueId } from 'gs-uitk-lodash';
+
+type TippyProps = Pick<Props, 'content'> & Partial<Props>;
+
+/**
+ * Popovers display informative text in temporary windows.
+ * Popovers usually have a header and a content body.
+ */
+@Directive({
+    selector: '[gsPopover]',
+    exportAs: 'gsPopover',
+})
+export class Popover implements AfterViewInit {
+    /**
+     * Content to display in popover body
+     */
+    @Input() gsPopoverBody: undefined | string | TemplateRef<any>;
+    /**
+     * Content to display in popover header
+     */
+    @Input() gsPopoverHeader: undefined | string | TemplateRef<any>;
+    @Input() gsPopoverSize: PopoverProps['size'] = 'md';
+    @Input() gsPopoverPlacement: PopoverProps['placement'] = 'auto';
+    @Input() gsPopoverShowTip: PopoverProps['showTip'] = true;
+    @Input() gsPopoverDismissible: PopoverProps['dismissible'] = false;
+    @Input() gsPopoverShowDelay: PopoverProps['showDelay'] = 0;
+    @Input() gsPopoverHideDelay: PopoverProps['hideDelay'] = 0;
+    @Input() gsPopoverTriggers: PopoverProps['triggers'];
+    @Input() gsPopoverClass: PopoverProps['className'] = '';
+    @Input() gsPopoverClasses?: PopoverProps['classes'];
+    @Input() gsPopoverFade: PopoverProps['fade'] = false;
+    @Input() gsPopoverFlip: PopoverProps['flip'] = true;
+    @Input() gsPopoverContainer: PopoverProps['container'];
+    @Input() set gsPopoverVisible(visible: PopoverProps['visible']) {
+        if (visible) {
+            this.show();
+        } else {
+            this.hide();
+        }
+    }
+
+    /**
+     * Event emitted when the popover is shown.
+     */
+    @Output() gsPopoverShow = new EventEmitter();
+
+    /**
+     * Event emitted when the popover is hidden.
+     */
+    @Output() gsPopoverHide = new EventEmitter();
+
+    /**
+     * Event emitted before the popover is shown.
+     */
+    @Output() gsPopoverBeforeShow = new EventEmitter();
+
+    /**
+     * Event emitted before the popover is hidden.
+     */
+    @Output() gsPopoverBeforeHide = new EventEmitter();
+
+    /**
+     * The CSS-in-JS classes for the component, as a result of mounting the JsStyleSheet.
+     */
+    public cssClasses!: PopoverCssClasses;
+
+    public tippyCssClasses!: TippyCssClasses;
+
+    public tippyContainerClass!: string;
+
+    private themeSubscription: Subscription;
+
+    /**
+     * Shows the popover.
+     * Consider using in conjunction with "manual" trigger property.
+     * @public
+     */
+    public show() {
+        this.instance && this.instance.show();
+    }
+
+    /**
+     * Hides the popover.
+     * Consider using in conjunction with "manual" trigger property.
+     * @public
+     */
+    public hide() {
+        this.instance && this.instance.hide();
+    }
+
+    /**
+     * Toggles the popover.
+     * Consider using in conjunction with "manual" trigger property.
+     * @public
+     */
+    public toggle() {
+        if (this.instance) {
+            this.isVisible() ? this.instance.hide() : this.instance.show();
+        }
+    }
+
+    /**
+     * Boolean to indicate if popover is currently shown.
+     * @public
+     */
+    public isVisible() {
+        return this.instance && this.instance.state.isVisible;
+    }
+
+    // instance of popover created by this class
+    private instance: Instance<TippyProps> | null = null;
+
+    private closeButtonRef!: ComponentRef<IconComponent>;
+
+    constructor(
+        private hostElementRef: ElementRef,
+        private zone: NgZone,
+        private renderer: Renderer2,
+        private themeService: ThemeService,
+        private appRef: ApplicationRef,
+        private componentFactoryResolver: ComponentFactoryResolver,
+        private changeDetectorRef: ChangeDetectorRef,
+        private injector: Injector
+    ) {
+        this.themeSubscription = this.themeService.theme$.subscribe(() => {
+            this.updateTheme();
+            this.changeDetectorRef.markForCheck();
+        });
+    }
+
+    private updateTheme() {
+        const theme = this.themeService.getTheme();
+        this.tippyCssClasses = tippyStyleSheet.mount(this, { theme: theme });
+        this.tippyContainerClass = getPopoverRootClasses({
+            tippyCssClasses: this.tippyCssClasses,
+            className: this.gsPopoverClass,
+            overrideClasses: this.gsPopoverClasses,
+        });
+        if (this.instance) {
+            const container = this.instance.popper.firstElementChild!;
+            container.removeAttribute('class');
+            addClasses(container, this.tippyContainerClass);
+        }
+    }
+
+    public ngOnDestroy() {
+        popoverStyleSheet.unmount(this);
+        tippyStyleSheet.unmount(this);
+        this.themeSubscription.unsubscribe();
+        if (this.closeButtonRef) {
+            this.closeButtonRef.destroy();
+        }
+    }
+
+    // attaches an instance of 'tippy' popover to the host element on which the gsPopover is defined
+    ngAfterViewInit() {
+        const hostElement = this.hostElementRef.nativeElement;
+
+        if (this.gsPopoverBody == null && this.gsPopoverHeader == null) {
+            throw new Error(
+                `gsPopover: No content found for popover to show.` +
+                    `Please provide string or TemplateRef to [gsPopover] defined on element ${hostElement.outerHTML}`
+            );
+        }
+
+        // used to identify popover using the host element
+        const popoverId = uniqueId('gs-uitk-popover-');
+        this.renderer.setAttribute(hostElement, 'data-gs-uitk-popover-id', popoverId);
+
+        // run outside of angular zone to avoid events registered by tippy to trigger change detection cycles
+        this.zone.runOutsideAngular(() => {
+            // tippy() returns single instance or array of instances; in this case, we know it is a single instance
+            this.instance = tippy(
+                hostElement,
+                this.getTippyOptions(popoverId)
+            ) as unknown as Instance<TippyProps>;
+            this.updateTheme();
+        });
+        componentAnalytics.trackRender({ officialComponentName: 'popover' });
+    }
+
+    /**
+     * Sets options specific to tippy.js popover
+     */
+    private getTippyOptions(id: string): TippyProps {
+        const theme = this.themeService.getTheme();
+        this.cssClasses = popoverStyleSheet.mount(this, { size: this.gsPopoverSize, theme });
+
+        const options: GsPopoverInputs = {
+            id: id,
+            size: this.gsPopoverSize!,
+            placement: this.gsPopoverPlacement,
+            showTip: this.gsPopoverShowTip,
+            hideDelay: this.gsPopoverHideDelay,
+            showDelay: this.gsPopoverShowDelay,
+            dismissible: this.gsPopoverDismissible,
+            flip: this.gsPopoverFlip,
+            fade: this.gsPopoverFade,
+            container: this.gsPopoverContainer,
+            classes: this.gsPopoverClasses,
+            triggers: this.gsPopoverTriggers,
+            onShow: () => this.gsPopoverShow.emit(),
+            onHide: () => this.gsPopoverHide.emit(),
+            onBeforeShow: () => this.gsPopoverBeforeShow.emit(),
+            onBeforeHide: () => this.gsPopoverBeforeHide.emit(),
+        };
+
+        return {
+            ...createTippyOptions('popover', options, this.cssClasses),
+            content: this.getPopoverContent(),
+        };
+    }
+
+    /**
+     * Creates a div element containing contents that the popover would show.
+     * A PopoverContentComponent is dynamically created that handles string or
+     * templateRef bindings for the header and footer
+     */
+    private getPopoverContent() {
+        // Create an instance of PopoverContentComponent using component factory
+        // resolver.
+        const popoverContentRef = this.componentFactoryResolver
+            .resolveComponentFactory(PopoverContentComponent)
+            .create(this.injector);
+
+        // Set the values that were passed through the gsPopover directive
+        popoverContentRef.instance.cssClasses = this.cssClasses;
+        popoverContentRef.instance.gsPopoverBody = this.gsPopoverBody;
+        popoverContentRef.instance.gsPopoverHeader = this.gsPopoverHeader;
+        popoverContentRef.instance.gsPopoverDismissible = this.gsPopoverDismissible;
+        popoverContentRef.instance.gsPopoverClasses = this.cssClasses;
+
+        // Attach the element to ApplicationRef to ensure this stays in the zone
+        // and it's lifecycle is managed by angular
+        this.appRef.attachView(popoverContentRef.hostView);
+
+        // Create a new div and append the popoverContent's native element. This div
+        // will be controlled and styled by Tippy as defined in popover-base
+        const popoverTippyDiv = document.createElement('div');
+        popoverTippyDiv.appendChild(popoverContentRef.instance.elementRef.nativeElement);
+
+        // Trigger a change detection to ensure all the values are passed to the
+        // dynamically component and it gets rendered on the DOM
+        this.changeDetectorRef.detectChanges();
+
+        return popoverTippyDiv;
+    }
+}
