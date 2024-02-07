@@ -1,3 +1,891 @@
+[
+    {
+        "value": "AGENCY",
+        "children": [
+            {
+                "value": "FOREIGN",
+                "children": [
+                    {
+                        "value": "AGY GUARANTEE",
+                        "children": []
+                    },
+                    {
+                        "value": "GOVT GUARANTEE",
+                        "children": [
+                            {
+                                "value": "AGY GOVT GUARANTEE",
+                                "children": []
+                            },
+                            {
+                                "value": "CORP GOVT GUARANTEE",
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "value": "DOMESTIC",
+                "children": [
+                    {
+                        "value": "AGY GUARANTEE",
+                        "children": [
+                            {
+                                "value": "NOMINAL COUPON",
+                                "children": []
+                            },
+                            {
+                                "value": "DISCOUNT NOTE",
+                                "children": []
+                            },
+                            {
+                                "value": "INFLATION PROTECTED",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "value": "GOVT GUARANTEE",
+                        "children": [
+                            {
+                                "value": "NOMINAL COUPON",
+                                "children": [
+                                    {
+                                        "value": "AGY GOVT GUARANTEE",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "CORP GOVT GUARANTEE",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "INFLATION PROTECTED",
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "value": "COLLATERALIZED",
+        "children": [
+            {
+                "value": "ABS",
+                "children": [
+                    {
+                        "value": "OTHER",
+                        "children": []
+                    },
+                    {
+                        "value": "AUTO",
+                        "children": [
+                            {
+                                "value": "PRIME",
+                                "children": [
+                                    {
+                                        "value": "SUB",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "SENIOR",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "NON US",
+                                "children": [
+                                    {
+                                        "value": "SUB",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "SENIOR",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "SUB PRIME",
+                                "children": [
+                                    {
+                                        "value": "SUB",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "SENIOR",
+                                        "children": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "value": "SBA",
+                        "children": [
+                            {
+                                "value": "FLOATING",
+                                "children": []
+                            },
+                            {
+                                "value": "FIXED",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "value": "CREDIT Card",
+                        "children": [
+                            {
+                                "value": "BANK CARD",
+                                "children": []
+                            },
+                            {
+                                "value": "RETAIL CARD",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "value": "CONSUMER",
+                        "children": []
+                    },
+                    {
+                        "value": "MORTGAGE",
+                        "children": [
+                            {
+                                "value": "HOME EQ",
+                                "children": [
+                                    {
+                                        "value": "NAS",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "NIM",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "MEZZ",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "SEQ",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "FLT",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "HELOC",
+                                "children": []
+                            },
+                            {
+                                "value": "MAN HOUSING",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "value": "Dealer Floor Plan",
+                        "children": []
+                    },
+                    {
+                        "value": "UTILITY",
+                        "children": []
+                    },
+                    {
+                        "value": "NON INDEX",
+                        "children": [
+                            {
+                                "value": "OTHER",
+                                "children": [
+                                    {
+                                        "value": "WAREHOUSE CREDIT FACILITY",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "Collateralized Debt Obligation",
+                                "children": [
+                                    {
+                                        "value": "Senior",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "Mezz",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "Equipment",
+                                "children": []
+                            },
+                            {
+                                "value": "PRIVATE STUDENT LOANS",
+                                "children": [
+                                    {
+                                        "value": "Floating Rate",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "Auction Rate",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "Fixed Rate",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "LEASE",
+                                "children": []
+                            },
+                            {
+                                "value": "NONSECTORED",
+                                "children": []
+                            },
+                            {
+                                "value": "WHOLE BUSINESS SECURITIZATION",
+                                "children": []
+                            },
+                            {
+                                "value": "Franchise",
+                                "children": []
+                            },
+                            {
+                                "value": "FFELP STUDENT LOANS",
+                                "children": [
+                                    {
+                                        "value": "Floating Rate",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "SUBORDINATE",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "Auction Rate",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "Fixed Rate",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "Collateralized Loan Obligation",
+                                "children": [
+                                    {
+                                        "value": "Senior MM",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "Unsettled Refi",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "Senior BSL",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "Equity",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "Mezz",
+                                        "children": []
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "value": "COVERED BOND",
+                "children": [
+                    {
+                        "value": "PFANDBRIEF",
+                        "children": [
+                            {
+                                "value": "REGULAR",
+                                "children": []
+                            },
+                            {
+                                "value": "JUMBO",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "value": "NON-PFANDBRIEF",
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "value": "MBS",
+                "children": [
+                    {
+                        "value": "CMO_ALT-A",
+                        "children": [
+                            {
+                                "value": "SUPPORT",
+                                "children": [
+                                    {
+                                        "value": "SUPPORT Z",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "SUPPORT",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "STRUCTURED NOTE AGENCY RISK SHARING",
+                                "children": [
+                                    {
+                                        "value": "FLT",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "PAC",
+                                "children": [
+                                    {
+                                        "value": "PAC",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "PAC Z",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "TAC",
+                                "children": []
+                            },
+                            {
+                                "value": "MEZZ",
+                                "children": []
+                            },
+                            {
+                                "value": "SEQ",
+                                "children": [
+                                    {
+                                        "value": "SEQ Z",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "SEQ",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "FLT",
+                                "children": [
+                                    {
+                                        "value": "OTHER",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "LIBOR",
+                                        "children": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "value": "Pass-Through",
+                        "children": [
+                            {
+                                "value": "BALLOONS",
+                                "children": []
+                            },
+                            {
+                                "value": "GNMA",
+                                "children": []
+                            },
+                            {
+                                "value": "CONVENTIONAL",
+                                "children": []
+                            },
+                            {
+                                "value": "15 YEARS",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "value": "CMO",
+                        "children": [
+                            {
+                                "value": "HMBS PT",
+                                "children": []
+                            },
+                            {
+                                "value": "SUPPORT",
+                                "children": [
+                                    {
+                                        "value": "SUPPORT Z",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "SUPPORT",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "PAC",
+                                "children": [
+                                    {
+                                        "value": "PAC",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "PAC Z",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "TAC",
+                                "children": []
+                            },
+                            {
+                                "value": "MEZZ",
+                                "children": []
+                            },
+                            {
+                                "value": "SEQ",
+                                "children": [
+                                    {
+                                        "value": "SEQ",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "SEQ Z",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "STRUCTURED NOTE AGENCY CMO",
+                                "children": [
+                                    {
+                                        "value": "FIXED",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "FLT",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "FLT",
+                                "children": [
+                                    {
+                                        "value": "OTHER",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "LIBOR",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "CMT",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "Z BOND",
+                                "children": []
+                            },
+                            {
+                                "value": "HECM CMO",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "value": "CMBS",
+                        "children": [
+                            {
+                                "value": "CRE CLO",
+                                "children": []
+                            },
+                            {
+                                "value": "MEZZ",
+                                "children": []
+                            },
+                            {
+                                "value": "SEQ",
+                                "children": []
+                            },
+                            {
+                                "value": "FLT",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "value": "NON-US",
+                        "children": [
+                            {
+                                "value": "NONCONFORMING",
+                                "children": []
+                            },
+                            {
+                                "value": "PRIME",
+                                "children": []
+                            },
+                            {
+                                "value": "Credit Risk Transfer",
+                                "children": []
+                            },
+                            {
+                                "value": "BUYTOLET",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "value": "AGY MF",
+                        "children": [
+                            {
+                                "value": "Pass-Through",
+                                "children": []
+                            },
+                            {
+                                "value": "CMO",
+                                "children": [
+                                    {
+                                        "value": "IO",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "SEQ",
+                                        "children": [
+                                            {
+                                                "value": "SEQ Z",
+                                                "children": []
+                                            },
+                                            {
+                                                "value": "SEQ",
+                                                "children": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "value": "ARM",
+                        "children": [
+                            {
+                                "value": "AGENCY",
+                                "children": [
+                                    {
+                                        "value": "GNMA",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "CONVENTIONAL",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "NON AGENCY",
+                                "children": [
+                                    {
+                                        "value": "MULTI FAMILY",
+                                        "children": [
+                                            {
+                                                "value": "COFI",
+                                                "children": []
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "value": "SINGLE FAMILY",
+                                        "children": [
+                                            {
+                                                "value": "OTHER",
+                                                "children": []
+                                            },
+                                            {
+                                                "value": "LIBOR",
+                                                "children": [
+                                                    {
+                                                        "value": "ARM",
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "value": "FLT",
+                                                        "children": []
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "value": "MTA",
+                                                "children": []
+                                            },
+                                            {
+                                                "value": "PRIME HYBRID",
+                                                "children": []
+                                            },
+                                            {
+                                                "value": "ALT A HYBRID",
+                                                "children": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "value": "MBS DERIV",
+                        "children": [
+                            {
+                                "value": "CMBS",
+                                "children": [
+                                    {
+                                        "value": "MULITFAM",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "NonAGY",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "CMBS IO",
+                                "children": [
+                                    {
+                                        "value": "AGY",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "NonAGY",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "IO",
+                                "children": [
+                                    {
+                                        "value": "AGY",
+                                        "children": [
+                                            {
+                                                "value": "CMO IO",
+                                                "children": [
+                                                    {
+                                                        "value": "CMO IO",
+                                                        "children": []
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "value": "ARM IO",
+                                                "children": []
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "value": "CMO IO",
+                                        "children": [
+                                            {
+                                                "value": "CMO IO",
+                                                "children": []
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "value": "MULITFAM",
+                                        "children": [
+                                            {
+                                                "value": "CMO IO",
+                                                "children": [
+                                                    {
+                                                        "value": "CMO IO",
+                                                        "children": []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "value": "TRUST",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "NonAGY",
+                                        "children": [
+                                            {
+                                                "value": "CMO IO",
+                                                "children": [
+                                                    {
+                                                        "value": "CMO IO",
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "value": "ARM IO",
+                                                        "children": []
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "value": "ARM IO",
+                                                "children": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "SFLOAT",
+                                "children": [
+                                    {
+                                        "value": "AGY",
+                                        "children": [
+                                            {
+                                                "value": "SFLOAT IO",
+                                                "children": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "INVERSE",
+                                "children": [
+                                    {
+                                        "value": "AGY",
+                                        "children": [
+                                            {
+                                                "value": "Inv Floater",
+                                                "children": [
+                                                    {
+                                                        "value": "OTHER",
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "value": "LIBOR",
+                                                        "children": []
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "value": "Two Tier Inv Fltr",
+                                                "children": []
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "value": "Inv Floater",
+                                        "children": [
+                                            {
+                                                "value": "LIBOR",
+                                                "children": []
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "value": "NonAGY",
+                                        "children": [
+                                            {
+                                                "value": "Inv Floater",
+                                                "children": [
+                                                    {
+                                                        "value": "LIBOR",
+                                                        "children": []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "INVIO",
+                                "children": [
+                                    {
+                                        "value": "AGY",
+                                        "children": [
+                                            {
+                                                "value": "INVIO",
+                                                "children": []
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "value": "INVIO",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "value": "PO",
+                                "children": [
+                                    {
+                                        "value": "AGY",
+                                        "children": [
+                                            {
+                                                "value": "CMO PO",
+                                                "children": []
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "value": "CMO PO",
+                                        "children": []
+                                    },
+                                    {
+                                        "value": "NonAGY",
+                                        "children": [
+                                            {
+                                                "value": "CMO PO",
+                                                "children": []
+                                            },
+                                            {
+                                                "value": "TRUST",
+                                                "children": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+]
 {
   "AGENCY": {
     "FOREIGN": {
