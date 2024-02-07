@@ -1,3 +1,55 @@
+/**
+ * Creates the actual CSS rules for the GS Design System Custom Scrollbar
+ */
+@mixin gs-uitk-design-system-custom-scrollbar {
+    ::-webkit-scrollbar {
+        width: 9px;
+        height: 8px;
+        background-color: transparent;
+    }
+
+    @media (max-width: 575.98px) {
+        ::-webkit-scrollbar {
+            display: none;
+            width: 0px;
+        }
+    }
+
+    /*Track*/
+
+    ::-webkit-scrollbar-track {
+        border-radius: 0px;
+        background-color: transparent;
+        border: 4px solid transparent;
+        background-clip: content-box;
+    }
+
+    ::-webkit-scrollbar-track:hover {
+        background: $gs-uitk-gray-010;
+    }
+
+    /*Thumb*/
+
+    ::-webkit-scrollbar-thumb {
+        border: 1px solid $gs-uitk-gray-030;
+        background: $gs-uitk-gray-030;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        border: 0px solid $gs-uitk-gray-020;
+        background: $gs-uitk-gray-090;
+    }
+
+    ::-webkit-scrollbar-thumb:active {
+        background: $gs-uitk-gray-090;
+    }
+
+    ::-webkit-scrollbar-corner {
+        background: transparent;
+    }
+}
+
+
 [
     {
         "value": "AGENCY",
