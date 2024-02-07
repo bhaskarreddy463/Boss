@@ -1,3 +1,195 @@
+{
+  "AGENCY": {
+    "FOREIGN": {
+      "AGY GUARANTEE": {},
+      "GOVT GUARANTEE": { "AGY GOVT GUARANTEE": {}, "CORP GOVT GUARANTEE": {} }
+    },
+    "DOMESTIC": {
+      "AGY GUARANTEE": {
+        "NOMINAL COUPON": {},
+        "DISCOUNT NOTE": {},
+        "INFLATION PROTECTED": {}
+      },
+      "GOVT GUARANTEE": {
+        "NOMINAL COUPON": {
+          "AGY GOVT GUARANTEE": {},
+          "CORP GOVT GUARANTEE": {}
+        },
+        "INFLATION PROTECTED": {}
+      }
+    }
+  },
+  "COLLATERALIZED": {
+    "ABS": {
+      "OTHER": {},
+      "AUTO": {
+        "PRIME": { "SUB": {}, "SENIOR": {} },
+        "NON US": { "SUB": {}, "SENIOR": {} },
+        "SUB PRIME": { "SUB": {}, "SENIOR": {} }
+      },
+      "SBA": { "FLOATING": {}, "FIXED": {} },
+      "CREDIT Card": { "BANK CARD": {}, "RETAIL CARD": {} },
+      "CONSUMER": {},
+      "MORTGAGE": {
+        "HOME EQ": { "NAS": {}, "NIM": {}, "MEZZ": {}, "SEQ": {}, "FLT": {} },
+        "HELOC": {},
+        "MAN HOUSING": {}
+      },
+      "Dealer Floor Plan": {},
+      "UTILITY": {},
+      "NON INDEX": {
+        "OTHER": { "WAREHOUSE CREDIT FACILITY": {} },
+        "Collateralized Debt Obligation": { "Senior": {}, "Mezz": {} },
+        "Equipment": {},
+        "PRIVATE STUDENT LOANS": {
+          "Floating Rate": {},
+          "Auction Rate": {},
+          "Fixed Rate": {}
+        },
+        "LEASE": {},
+        "NONSECTORED": {},
+        "WHOLE BUSINESS SECURITIZATION": {},
+        "Franchise": {},
+        "FFELP STUDENT LOANS": {
+          "Floating Rate": {},
+          "SUBORDINATE": {},
+          "Auction Rate": {},
+          "Fixed Rate": {}
+        },
+        "Collateralized Loan Obligation": {
+          "Senior MM": {},
+          "Unsettled Refi": {},
+          "Senior BSL": {},
+          "Equity": {},
+          "Mezz": {}
+        }
+      }
+    },
+    "COVERED BOND": {
+      "PFANDBRIEF": { "REGULAR": {}, "JUMBO": {} },
+      "NON-PFANDBRIEF": {}
+    },
+    "MBS": {
+      "CMO_ALT-A": {
+        "SUPPORT": { "SUPPORT Z": {}, "SUPPORT": {} },
+        "STRUCTURED NOTE AGENCY RISK SHARING": { "FLT": {} },
+        "PAC": { "PAC": {}, "PAC Z": {} },
+        "TAC": {},
+        "MEZZ": {},
+        "SEQ": { "SEQ Z": {}, "SEQ": {} },
+        "FLT": { "OTHER": {}, "LIBOR": {} }
+      },
+      "Pass-Through": {
+        "BALLOONS": {},
+        "GNMA": {},
+        "CONVENTIONAL": {},
+        "15 YEARS": {}
+      },
+      "CMO": {
+        "HMBS PT": {},
+        "SUPPORT": { "SUPPORT Z": {}, "SUPPORT": {} },
+        "PAC": { "PAC": {}, "PAC Z": {} },
+        "TAC": {},
+        "MEZZ": {},
+        "SEQ": { "SEQ": {}, "SEQ Z": {} },
+        "STRUCTURED NOTE AGENCY CMO": { "FIXED": {}, "FLT": {} },
+        "FLT": { "OTHER": {}, "LIBOR": {}, "CMT": {} },
+        "Z BOND": {},
+        "HECM CMO": {}
+      },
+      "CMBS": { "CRE CLO": {}, "MEZZ": {}, "SEQ": {}, "FLT": {} },
+      "NON-US": {
+        "NONCONFORMING": {},
+        "PRIME": {},
+        "Credit Risk Transfer": {},
+        "BUYTOLET": {}
+      },
+      "AGY MF": {
+        "Pass-Through": {},
+        "CMO": { "IO": {}, "SEQ": { "SEQ Z": {}, "SEQ": {} } }
+      },
+      "ARM": {
+        "AGENCY": { "GNMA": {}, "CONVENTIONAL": {} },
+        "NON AGENCY": {
+          "MULTI FAMILY": { "COFI": {} },
+          "SINGLE FAMILY": {
+            "OTHER": {},
+            "LIBOR": { "ARM": {}, "FLT": {} },
+            "MTA": {},
+            "PRIME HYBRID": {},
+            "ALT A HYBRID": {}
+          }
+        }
+      },
+      "MBS DERIV": {
+        "CMBS": { "MULITFAM": {}, "NonAGY": {} },
+        "CMBS IO": { "AGY": {}, "NonAGY": {} },
+        "IO": {
+          "AGY": { "CMO IO": { "CMO IO": {} }, "ARM IO": {} },
+          "CMO IO": { "CMO IO": {} },
+          "MULITFAM": { "CMO IO": { "CMO IO": {} } },
+          "TRUST": {},
+          "NonAGY": { "CMO IO": { "CMO IO": {}, "ARM IO": {} }, "ARM IO": {} }
+        },
+        "SFLOAT": { "AGY": { "SFLOAT IO": {} } },
+        "INVERSE": {
+          "AGY": {
+            "Inv Floater": { "OTHER": {}, "LIBOR": {} },
+            "Two Tier Inv Fltr": {}
+          },
+          "Inv Floater": { "LIBOR": {} },
+          "NonAGY": { "Inv Floater": { "LIBOR": {} } }
+        },
+        "INVIO": { "AGY": { "INVIO": {} }, "INVIO": {} },
+        "PO": {
+          "AGY": { "CMO PO": {} },
+          "CMO PO": {},
+          "NonAGY": { "CMO PO": {}, "TRUST": {} }
+        }
+      }
+    }
+  },
+};
+
+private loadGSHLevels(): void {
+    // this.metricsService.gshSelector('TOTALS,FI', 4).subscribe((response) => {
+      console.log(selectorData);
+      const res = [selectorData];
+      let i = 0;
+      res.forEach((resu) => {
+        Object.keys(resu).forEach((result) => {
+          this.gshValues.push(this.formatLevels(new Map<string, Object>().set(result, Object.values(resu)[i])));
+          i++;
+        });
+        console.log(this.gshValues);
+      });
+      console.log('res', res);
+    // });
+  }
+
+private formatLevels(level: Map<string, Object>): GSH {
+    const gsh = <GSH>{
+      value: '',
+      children: []
+    };
+    
+    gsh.value = level.keys().next().value;
+    gsh.children = [];
+    const children = level.values().next().value;
+    const childMap = new Map<string, Object>(Object.entries(children));
+    if (!children) {
+      return gsh;
+    }
+
+    const childCondition = Object.keys(children).length;
+    if (childCondition > 0) {
+      Object.keys(children).forEach((key) => gsh.children.push(this.formatLevels(new Map().set(key, childMap.get(key)))));
+    }
+
+    return gsh;
+  }
+
+
 private formatLevels(level: Map<string, Object>): GSH {
     const gsh = <GSH>{};
     gsh.value = level.keys().next().value;
