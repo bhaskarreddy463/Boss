@@ -1,3 +1,48 @@
+import { GshSelectorComponent } from './gsh-selector.component';
+import { Meta, moduleMetadata, StoryFn } from '@storybook/angular';
+import { provideMockStore } from '@ngrx/store/testing';
+
+export default {
+  title: 'Grids/GSH Selector',
+  tags: ['autodocs'],
+  component: GshSelectorComponent,
+  decorators: [
+    moduleMetadata({
+      imports: [],
+    }),
+  ],
+} as Meta<GshSelectorComponent>;
+
+const Template: StoryFn<GshSelectorComponent> = (args: GshSelectorComponent) => ({
+  props: args,
+  providors: [provideMockStore({})],
+});
+
+export const DefaultView = Object.assign(Template.bind({}), { order: 0 });
+<div [hidden]="!expanded && gshLevel !== 3">
+    <gs-label [classes]="{ label: overrideClasses.label}"><strong>{{ gshLevelLabel }}</strong></gs-label>
+    <div *ngFor="let gsh of gshValues let i = index">
+        {{i}}
+        <div class="gsh-row row g-0" (keydown)="navigateSelector($event, gsh, i)">
+            <div autofocus tabindex="0" #dropdownButton [class]="'col-auto dropdown-button-' + (gshLevel-2)" *ngIf="gsh.children.length" (click)="selectDropdown(gsh, i, dropdownButton); $event.stopPropagation()" (keydown.enter)="selectDropdown(gsh, i, dropdownButton); $event.stopPropagation()">
+                <gs-icon [ngStyle]="gsh.clicked ? { 'rotate': '90deg' } : {}" name="chevron-right" type="filled"
+                    size="sm"></gs-icon>
+            </div>
+            <!-- div with ngIf on gsh.children.length -->
+            <div tabindex="0" #dropdownButton *ngIf="!gsh.children.length" [class]="'col-auto childless-dropdown-' + (gshLevel-2)"></div>
+            <div tabindex="0" #gshLevelButton class="d-flex flex-column flex=1"
+                [class]="gsh.children.length ? 'col gsh-button' : 'col gsh-button gsh-button__childless-' + (gshLevel-2)"
+                (click)="selectLevel(gsh, gshLevel)" (keydown.enter)="selectLevel(gsh, gshLevel); $event.stopPropagation()">
+                <div class="key-label">{{ gsh.value }}</div>
+                <div class="sub-label">Enter to select this item</div>
+            </div>
+        </div>
+        <!-- <metrics-gsh-selector #childCmp [queryfieldRef]="queryfieldRef" [expanded]="expandedNodes[i]" [gshLevel]="gshLevel+1" [gshChildren]="gsh.children" (outOfBounds)="detectOutOfBounds($event)"
+            *ngIf="!gsh.children.length"></metrics-gsh-selector> -->
+        <metrics-gsh-selector #childCmp [queryfieldRef]="queryfieldRef" [expanded]="expandedNodes[i]" [gshLevel]="gshLevel+1" [gshChildren]="gsh.children" (outOfBounds)="detectOutOfBounds($event)"
+            *ngIf="gsh.children.length"></metrics-gsh-selector>
+    </div></div>
+
 import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, QueryList, SimpleChanges, ViewChildren } from '@angular/core';
 import { ButtonModule } from '@gs-ux-uitoolkit-angular/button';
 import { colors } from '@gs-ux-uitoolkit-common/design-system';
