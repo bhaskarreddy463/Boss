@@ -1,3 +1,47 @@
+<input #input
+        data-input
+        placeholder="Select value..."
+        type="text"
+        name="date"
+        readonly
+        inputId="text-input"
+        className="free-input" #queryCustomInput="gsPopover" [gsPopoverShowTip]="false" gsPopoverPlacement="bottom-left"
+        gsPopoverClass="metrics-container__light-popover gsh-metrics-container__popover" gsPopover [gsPopoverBody]="gshSelector" [gsPopoverVisible]="true"/>
+
+<ng-template #gshSelector>
+    <metrics-gsh-selector (predicateFilterChanged)="emitPredicateFilterChange($event)" [queryfieldRef]="queryfieldRef" [expanded]="true" class="custom-queryfield">
+    </metrics-gsh-selector>
+</ng-template>
+
+          import { AfterViewInit, Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { GshSelectorComponent } from '../../../gsh-selector/gsh-selector.component';
+import { Popover, PopoverModule } from '@gs-ux-uitoolkit-angular/popover';
+import { QueryFieldComponent } from '@gs-ux-uitoolkit-angular/queryfield';
+
+@Component({
+  selector: 'metrics-gsh-wrapper',
+  standalone: true,
+  imports: [CommonModule, PopoverModule, GshSelectorComponent],
+  templateUrl: './gsh-wrapper.component.html',
+  styleUrl: './gsh-wrapper.component.scss',
+})
+export class GshWrapperComponent implements AfterViewInit {
+  @Input() queryfieldRef!: QueryFieldComponent;
+  @Output() readonly predicateFilterChanged: EventEmitter<string> = new EventEmitter();
+  @ViewChild('input', { static: true }) input!: ElementRef<HTMLInputElement>;
+  @ViewChild('queryCustomInput', { read: Popover }) selectorPopover!: Popover;
+
+  ngAfterViewInit(): void {
+      this.input.nativeElement.click();
+  }
+
+  emitPredicateFilterChange(value: string): void {
+    this.predicateFilterChanged.emit(value);
+  }
+}
+
+
 import { GshSelectorComponent } from './gsh-selector.component';
 import { Meta, moduleMetadata, StoryFn } from '@storybook/angular';
 import { provideMockStore } from '@ngrx/store/testing';
