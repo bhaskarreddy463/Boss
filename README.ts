@@ -1,3 +1,55 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { GshWrapperComponent } from './gsh-wrapper.component';
+import { PopoverModule } from '@gs-ux-uitoolkit-angular/popover';
+import { QueryFieldComponent } from '@gs-ux-uitoolkit-angular/queryfield';
+
+describe('GshWrapperComponent', () => {
+  let component: GshWrapperComponent;
+  let fixture: ComponentFixture<GshWrapperComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      declarations: [GshWrapperComponent],
+      imports: [CommonModule, FormsModule, PopoverModule],
+    }).compileComponents();
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(GshWrapperComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should emit predicate filter change when received from gsh selector', () => {
+    const mockValue = 'Mock Predicate Filter Value';
+    const queryFieldRef: QueryFieldComponent = {} as QueryFieldComponent;
+
+    spyOn(component.predicateFilterChanged, 'emit');
+
+    // Manually trigger the predicate filter change event
+    component.emitPredicateFilterChange(mockValue);
+
+    // Check if the event was emitted with the correct value
+    expect(component.predicateFilterChanged.emit).toHaveBeenCalledWith(mockValue);
+  });
+
+  it('should open selector popover on ngAfterViewInit', () => {
+    spyOn(component.input.nativeElement, 'click');
+    component.ngAfterViewInit();
+
+    // Check if the click method of the input element was called
+    expect(component.input.nativeElement.click).toHaveBeenCalled();
+  });
+});
+
+
+
 <input #input
         data-input
         placeholder="Select value..."
