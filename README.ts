@@ -1,3 +1,16 @@
+gshSelector(path: string, depth: number): Observable<Map<string, object>> {
+    if(this.gshSelectorState){
+      return of(this.gshSelectorState);
+    }
+    return this.http.get<Map<string, object>>(`${environment.endpoints.elasticLoaders}/gsh-selector?path=${path}&depth=${depth}`).pipe(
+      catchError(() => of(new Map<string, object>),
+      map((response) => {
+        this.gshSelectorState = response;
+        return this.gshSelectorState;
+      }),
+    );
+  }
+
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
