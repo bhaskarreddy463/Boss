@@ -194,7 +194,7 @@ export const DefaultView = Object.assign(Template.bind({}), { order: 0 });
             *ngIf="gsh.children.length"></metrics-gsh-selector>
     </div></div>
 
-import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, QueryList, SimpleChanges, ViewChildren } from '@angular/core';
+import { AfterContentInit, AfterViewInit, Component, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, QueryList, SimpleChanges, ViewChildren } from '@angular/core';
 import { ButtonModule } from '@gs-ux-uitoolkit-angular/button';
 import { colors } from '@gs-ux-uitoolkit-common/design-system';
 import { CommonModule } from '@angular/common';
@@ -204,10 +204,11 @@ import { FIConstants } from '@gsam-fi/common';
 import { FiPixels } from '@gsam-fi/common/design-system';
 import { IconModule } from '@gs-ux-uitoolkit-angular/icon-font';
 import { LabelModule } from '@gs-ux-uitoolkit-angular/label';
+import { LoadingModule } from '@gs-ux-uitoolkit-angular/loading';
+import { map, Subject, takeUntil } from 'rxjs';
 import { MenuModule } from '@gs-ux-uitoolkit-angular/menu';
 import { PopoverModule } from '@gs-ux-uitoolkit-angular/popover';
 import { QueryFieldComponent } from '@gs-ux-uitoolkit-angular/queryfield';
-import { selectorData } from './gsh-selector-data';
 import { TreeModule } from '@gs-ux-uitoolkit-angular/tree';
 
 const overrideStyleSheet = new StyleSheet('gsh-label-override', {
@@ -224,10 +225,10 @@ export interface GSH {
   selector: 'metrics-gsh-selector',
   templateUrl: 'gsh-selector.component.html',
   styleUrls: ['./gsh-selector.component.scss'],
-  imports: [ButtonModule, CommonModule, IconModule, LabelModule, PopoverModule, TreeModule, MenuModule],
+  imports: [ButtonModule, CommonModule, IconModule, LabelModule, PopoverModule, TreeModule, MenuModule, LoadingModule],
   standalone: true,
 })
-export class GshSelectorComponent implements OnInit, OnChanges, AfterViewInit {
+export class GshSelectorComponent implements OnInit, OnChanges, AfterViewInit, AfterContentInit, OnDestroy {
   @Input() queryfieldRef!: QueryFieldComponent;
   @Input() expanded: boolean | undefined;
   @Input() gshLevel: number = 3; //replace with enum
@@ -246,12 +247,14 @@ export class GshSelectorComponent implements OnInit, OnChanges, AfterViewInit {
   prevSelected: GSH | undefined;
   onDropdown!: boolean;
   expandedNodes: { [level: number]: boolean } = {};
+  private destroy$: Subject<boolean> = new Subject();
   // queryfieldRef!: QueryFieldComponent;
 
   constructor(private readonly metricsService: ESGMetricsService) {}
 
   //this will be called for every child component
   ngOnInit(): void {
+    console.log('onInit');
     this.overrideClasses = overrideStyleSheet.mount(this, FIConstants.NULL);
     // this.gshValues = this.store$.pipe(select(this.gshLevel));
     this.gshLevelLabel = `L${this.gshLevel}`;
@@ -272,20 +275,27 @@ export class GshSelectorComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
+  ngAfterContentInit(): void {
+      console.log('content init');
+  }
+
+  ngOnDestroy(): void {
+    console.log('destroy');
+    overrideStyleSheet.unmount(this);
+    this.destroy$.next(true);
+    this.destroy$.complete();
+  }
+
   private loadGSHLevels(): void {
-    // this.metricsService.gshSelector('TOTALS,FI', 4).subscribe((response) => {
-    console.log(selectorData);
-    const res = [selectorData];
-    let i = 0;
-    res.forEach((resu) => {
-      Object.keys(resu).forEach((result) => {
-        this.gshValues.push(this.formatLevels(new Map<string, object>().set(result, Object.values(resu)[i])));
-        i++;
-      });
+    this.metricsService.gshSelector('TOTALS,FI', 4).pipe(
+      takeUntil(this.destroy$),
+      map((response) => {
+        return Object.entries(response).map(([key, value]) => this.formatLevels(new Map<string, object>().set(key, value as object)));
+      })
+    ).subscribe((gshValues) => {
+      this.gshValues.push(...gshValues);
       console.log(this.gshValues);
     });
-    console.log('res', res);
-    // });
   }
 
   private formatLevels(level: Map<string, object>): GSH {
@@ -312,20 +322,27 @@ export class GshSelectorComponent implements OnInit, OnChanges, AfterViewInit {
 
   // to run on first
   ngAfterViewInit(): void {
+    console.log('AfterviewInit');
     this.focusFirstChild(this.parentPosition, true);
+  }
+
+  emitPredicateFilterChange(value: string): void {
+    this.predicateFilterChanged.emit(value);
   }
 
   selectLevel(selectedGSH: GSH, gshLevel: number): void {
     if (this.queryfieldRef) {
+      this.emitPredicateFilterChange(`${selectedGSH.value  } (L${gshLevel})`);
       // this.predicateFilterChanged.emit(`${selectedGSH.value  } (L${gshLevel})`);
-      this.queryfieldRef.updateCurrentPredicate({
-        rightOperand: `${selectedGSH.value} (L${gshLevel})`,
-      });
+      // this.queryfieldRef.updateCurrentPredicate({
+      //   rightOperand: `${selectedGSH.value} (L${gshLevel})`,
+      // });
     }
   }
 
   //to run on all after
   ngOnChanges(changes: SimpleChanges): void {
+    console.log('ngOnchanges');
     if (changes.expanded.currentValue && this.expanded && this.dropdownElementRef?.length) {
       this.focusFirstChild(this.parentPosition, this.onDropdown);
     }
@@ -343,7 +360,7 @@ export class GshSelectorComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   // new clicked logic
-  selectDropdown(gsh: GSH, currentSelected: number, dropdownButtonRef: HTMLDivElement) {
+  selectDropdown(gsh: GSH, currentSelected: number, dropdownButtonRef: HTMLDivElement): void {
     if (this.onDropdown) {
       let currentClosed = false;
       //check if any others are expanded and if so close them
@@ -402,16 +419,18 @@ export class GshSelectorComponent implements OnInit, OnChanges, AfterViewInit {
         break;
 
       case 'ArrowDown':
-        console.log(this.childCmp.get(currentSelected));
-        if (this.expandedNodes[currentSelected] && this.childCmp.get(currentSelected)) {
-          this.childCmp.get(currentSelected - (this.gshLevelElementRef.length - this.childCmp.length))?.focusFirstChild(currentSelected, this.onDropdown);
-          this.childCmp.get(currentSelected - (this.gshLevelElementRef.length - this.childCmp.length))!.onDropdown = this.onDropdown;
+        if (this.expandedNodes[currentSelected]) {
+          const cmpChildObj = this.childCmp.find((cmp) => cmp.expanded || false);
+          if(cmpChildObj){
+            cmpChildObj?.focusFirstChild(currentSelected, this.onDropdown);
+            cmpChildObj.onDropdown = this.onDropdown;
+          }
           break;
         }
 
         //check if needed
         // case where dropdowns and level indexes are out of sync
-        if (!this.childCmp.get(currentSelected)) {
+        if (!this.childCmp.get(currentSelected) && currentSelected > this.dropdownElementRef.length) {
           this.childCmp.get(currentSelected - this.dropdownElementRef.length)?.focusFirstChild(currentSelected, false);
           break;
         }
@@ -432,8 +451,6 @@ export class GshSelectorComponent implements OnInit, OnChanges, AfterViewInit {
 
       case 'ArrowUp':
         //check if on first dropdown
-        console.log(this.dropdownElementRef.length);
-        console.log(this.gshValues);
         if (!this.dropdownElementRef.get(currentSelected - 1) && this.dropdownElementRef.length > 0) {
           const tempOnDropdown = this.onDropdown;
           this.onDropdown = true;
