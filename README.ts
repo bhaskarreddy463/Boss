@@ -1,3 +1,45 @@
+TypeError: this.metricsService.gshSelector is not a function
+    at GshSelectorComponent.loadGSHLevels (gsh-selector.component.ts:62:1)
+    at GshSelectorComponent.ngOnInit (gsh-selector.component.ts:49:1)
+    at callHookInternal (core.mjs:3523:1)
+    at callHook (core.mjs:3550:1)
+    at callHooks (core.mjs:3505:1)
+    at executeInitAndCheckHooks (core.mjs:3455:1)
+    at refreshView (core.mjs:13416:1)
+    at detectChangesInView (core.mjs:13626:1)
+    at detectChangesInViewWhileDirty (core.mjs:13342:1)
+    at detectChangesInternal (core.mjs:13322:1)
+
+import { ESGMetricsService } from '../esg-dashboard/esg-metrics.service';
+import { GshSelectorComponent } from './gsh-selector.component';
+import { Meta, moduleMetadata, StoryFn } from '@storybook/angular';
+import { provideMockStore } from '@ngrx/store/testing';
+import { selectorData } from './gsh-selector-data';
+
+export default {
+  title: 'Grids/GSH Selector',
+  tags: ['autodocs'],
+  component: GshSelectorComponent,
+  decorators: [
+    moduleMetadata({
+      imports: [],
+      providers:[{
+        provide: ESGMetricsService,
+        useValue: selectorData
+      }]
+    }),
+  ],
+} as Meta<GshSelectorComponent>;
+
+const Template: StoryFn<GshSelectorComponent> = (args: GshSelectorComponent) => ({
+  props: args,
+  providors: [provideMockStore({})],
+});
+
+export const DefaultView = Object.assign(Template.bind({}), { order: 0 });
+
+
+
 gshSelector(path: string, depth: number): Observable<Map<string, object>> {
     if(this.gshSelectorState){
       return of(this.gshSelectorState);
