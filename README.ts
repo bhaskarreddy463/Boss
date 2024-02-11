@@ -1,42 +1,428 @@
-TypeError: this.metricsService.gshSelector is not a function
-    at GshSelectorComponent.loadGSHLevels (gsh-selector.component.ts:62:1)
-    at GshSelectorComponent.ngOnInit (gsh-selector.component.ts:49:1)
-    at callHookInternal (core.mjs:3523:1)
-    at callHook (core.mjs:3550:1)
-    at callHooks (core.mjs:3505:1)
-    at executeInitAndCheckHooks (core.mjs:3455:1)
-    at refreshView (core.mjs:13416:1)
-    at detectChangesInView (core.mjs:13626:1)
-    at detectChangesInViewWhileDirty (core.mjs:13342:1)
-    at detectChangesInternal (core.mjs:13322:1)
-
-import { ESGMetricsService } from '../esg-dashboard/esg-metrics.service';
-import { GshSelectorComponent } from './gsh-selector.component';
-import { Meta, moduleMetadata, StoryFn } from '@storybook/angular';
-import { provideMockStore } from '@ngrx/store/testing';
-import { selectorData } from './gsh-selector-data';
-
-export default {
-  title: 'Grids/GSH Selector',
-  tags: ['autodocs'],
-  component: GshSelectorComponent,
-  decorators: [
-    moduleMetadata({
-      imports: [],
-      providers:[{
-        provide: ESGMetricsService,
-        useValue: selectorData
-      }]
-    }),
-  ],
-} as Meta<GshSelectorComponent>;
-
-const Template: StoryFn<GshSelectorComponent> = (args: GshSelectorComponent) => ({
-  props: args,
-  providors: [provideMockStore({})],
-});
-
-export const DefaultView = Object.assign(Template.bind({}), { order: 0 });
+[
+    {
+        "value": "AGENCY",
+        "children": [
+            {
+                "value": "FOREIGN",
+                "children": [
+                    {
+                        "value": "AGY GUARANTEE",
+                        "children": []
+                    },
+                    {
+                        "value": "GOVT GUARANTEE",
+                        "children": [
+                            {
+                                "value": "AGY GOVT GUARANTEE",
+                                "children": []
+                            },
+                            {
+                                "value": "CORP GOVT GUARANTEE",
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "value": "DOMESTIC",
+                "children": [
+                    {
+                        "value": "AGY GUARANTEE",
+                        "children": [
+                            {
+                                "value": "NOMINAL COUPON",
+                                "children": []
+                            },
+                            {
+                                "value": "DISCOUNT NOTE",
+                                "children": []
+                            },
+                            {
+                                "value": "INFLATION PROTECTED",
+                                "children": []
+                            }
+                        ],
+                        "clicked": true
+                    },
+                    {
+                        "value": "GOVT GUARANTEE",
+                        "children": [
+                            {
+                                "value": "NOMINAL COUPON",
+                                "children": []
+                            },
+                            {
+                                "value": "INFLATION PROTECTED",
+                                "children": []
+                            }
+                        ]
+                    }
+                ],
+                "clicked": true
+            }
+        ],
+        "clicked": true
+    },
+    {
+    "value": "COLLATERALIZED",
+    "children": [
+        {
+            "value": "ABS",
+            "children": [
+                {
+                    "value": "OTHER",
+                    "children": []
+                },
+                {
+                    "value": "AUTO",
+                    "children": [
+                        {
+                            "value": "PRIME",
+                            "children": []
+                        },
+                        {
+                            "value": "NON US",
+                            "children": []
+                        },
+                        {
+                            "value": "SUB PRIME",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "value": "SBA",
+                    "children": [
+                        {
+                            "value": "FLOATING",
+                            "children": []
+                        },
+                        {
+                            "value": "FIXED",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "value": "CREDIT Card",
+                    "children": [
+                        {
+                            "value": "BANK CARD",
+                            "children": []
+                        },
+                        {
+                            "value": "RETAIL CARD",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "value": "CONSUMER",
+                    "children": []
+                },
+                {
+                    "value": "MORTGAGE",
+                    "children": [
+                        {
+                            "value": "HOME EQ",
+                            "children": []
+                        },
+                        {
+                            "value": "HELOC",
+                            "children": []
+                        },
+                        {
+                            "value": "MAN HOUSING",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "value": "Dealer Floor Plan",
+                    "children": []
+                },
+                {
+                    "value": "UTILITY",
+                    "children": []
+                },
+                {
+                    "value": "NON INDEX",
+                    "children": [
+                        {
+                            "value": "Collateralized Debt Obligation",
+                            "children": []
+                        },
+                        {
+                            "value": "OTHER",
+                            "children": []
+                        },
+                        {
+                            "value": "Equipment",
+                            "children": []
+                        },
+                        {
+                            "value": "LEASE",
+                            "children": []
+                        },
+                        {
+                            "value": "PRIVATE STUDENT LOANS",
+                            "children": []
+                        },
+                        {
+                            "value": "NONSECTORED",
+                            "children": []
+                        },
+                        {
+                            "value": "WHOLE BUSINESS SECURITIZATION",
+                            "children": []
+                        },
+                        {
+                            "value": "Franchise",
+                            "children": []
+                        },
+                        {
+                            "value": "FFELP STUDENT LOANS",
+                            "children": []
+                        },
+                        {
+                            "value": "Collateralized Loan Obligation",
+                            "children": []
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "value": "COVERED BOND",
+            "children": [
+                {
+                    "value": "PFANDBRIEF",
+                    "children": [
+                        {
+                            "value": "REGULAR",
+                            "children": []
+                        },
+                        {
+                            "value": "JUMBO",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "value": "NON-PFANDBRIEF",
+                    "children": []
+                }
+            ]
+        },
+        {
+            "value": "MBS",
+            "children": [
+                {
+                    "value": "CMO_ALT-A",
+                    "children": [
+                        {
+                            "value": "SUPPORT",
+                            "children": []
+                        },
+                        {
+                            "value": "STRUCTURED NOTE AGENCY RISK SHARING",
+                            "children": []
+                        },
+                        {
+                            "value": "PAC",
+                            "children": []
+                        },
+                        {
+                            "value": "TAC",
+                            "children": []
+                        },
+                        {
+                            "value": "MEZZ",
+                            "children": []
+                        },
+                        {
+                            "value": "SEQ",
+                            "children": []
+                        },
+                        {
+                            "value": "FLT",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "value": "Pass-Through",
+                    "children": [
+                        {
+                            "value": "GNMA",
+                            "children": []
+                        },
+                        {
+                            "value": "BALLOONS",
+                            "children": []
+                        },
+                        {
+                            "value": "CONVENTIONAL",
+                            "children": []
+                        },
+                        {
+                            "value": "15 YEARS",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "value": "CMO",
+                    "children": [
+                        {
+                            "value": "HMBS PT",
+                            "children": []
+                        },
+                        {
+                            "value": "SUPPORT",
+                            "children": []
+                        },
+                        {
+                            "value": "PAC",
+                            "children": []
+                        },
+                        {
+                            "value": "TAC",
+                            "children": []
+                        },
+                        {
+                            "value": "MEZZ",
+                            "children": []
+                        },
+                        {
+                            "value": "STRUCTURED NOTE AGENCY CMO",
+                            "children": []
+                        },
+                        {
+                            "value": "SEQ",
+                            "children": []
+                        },
+                        {
+                            "value": "HECM CMO",
+                            "children": []
+                        },
+                        {
+                            "value": "FLT",
+                            "children": []
+                        },
+                        {
+                            "value": "Z BOND",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "value": "CMBS",
+                    "children": [
+                        {
+                            "value": "CRE CLO",
+                            "children": []
+                        },
+                        {
+                            "value": "MEZZ",
+                            "children": []
+                        },
+                        {
+                            "value": "SEQ",
+                            "children": []
+                        },
+                        {
+                            "value": "FLT",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "value": "NON-US",
+                    "children": [
+                        {
+                            "value": "NONCONFORMING",
+                            "children": []
+                        },
+                        {
+                            "value": "PRIME",
+                            "children": []
+                        },
+                        {
+                            "value": "Credit Risk Transfer",
+                            "children": []
+                        },
+                        {
+                            "value": "BUYTOLET",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "value": "AGY MF",
+                    "children": [
+                        {
+                            "value": "Pass-Through",
+                            "children": []
+                        },
+                        {
+                            "value": "CMO",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "value": "ARM",
+                    "children": [
+                        {
+                            "value": "AGENCY",
+                            "children": []
+                        },
+                        {
+                            "value": "NON AGENCY",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "value": "MBS DERIV",
+                    "children": [
+                        {
+                            "value": "CMBS",
+                            "children": []
+                        },
+                        {
+                            "value": "CMBS IO",
+                            "children": []
+                        },
+                        {
+                            "value": "IO",
+                            "children": []
+                        },
+                        {
+                            "value": "SFLOAT",
+                            "children": []
+                        },
+                        {
+                            "value": "INVERSE",
+                            "children": []
+                        },
+                        {
+                            "value": "INVIO",
+                            "children": []
+                        },
+                        {
+                            "value": "PO",
+                            "children": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+]
 
 
 
