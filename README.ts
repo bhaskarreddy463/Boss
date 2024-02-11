@@ -1,3 +1,35 @@
+selectLevel(selectedGSH: GSH, gshLevel: number): void {
+    // Initialize an empty array to store the parent node values
+    const parentValues: string[] = [];
+
+    // Helper function to traverse the data structure recursively and find the parent node values
+    const findParentValues = (node: GSH, path: string[]) => {
+        // Add the current node value to the path
+        path.push(node.value);
+
+        // If the current node is the selected node, set the parentValues array and return
+        if (node === selectedGSH) {
+            parentValues.push(...path);
+            return;
+        }
+
+        // Recursively traverse child nodes
+        for (const child of node.children) {
+            findParentValues(child, [...path]);
+        }
+    };
+
+    // Start traversing the data structure from the root node
+    findParentValues(this.gshValues, []);
+
+    // Log the parent node values
+    console.log('Parent Node Values:', parentValues);
+
+    // Now you have the parent node values in the parentValues array
+    // You can use them as needed
+}
+
+
 [
     {
         "value": "AGENCY",
