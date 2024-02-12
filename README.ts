@@ -1,3 +1,357 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { CUSTOM_ELEMENTS_SCHEMA, SimpleChange } from '@angular/core';
+
+import { ESGMetricsService } from '../esg-dashboard/esg-metrics.service';
+import { GSH, GshSelectorComponent } from './gsh-selector.component';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { of } from 'rxjs';
+import { selectorData } from './gsh-selector-data';
+
+describe('GshSelectorComponent', () => {
+  let component: GshSelectorComponent;
+  let fixture: ComponentFixture<GshSelectorComponent>;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [GshSelectorComponent, HttpClientTestingModule],
+      providers:[{
+        provide: ESGMetricsService,
+        useValue: {
+          gshSelector: () => of(selectorData)
+        }
+      }],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
+    }).compileComponents();
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(GshSelectorComponent);
+    component = fixture.componentInstance;
+    // fixture.detectChanges();
+  });
+
+  it('set gsh values on load', () => {
+    fixture.detectChanges();
+    expect(component.gshLevelLabel).toEqual('L3');
+    expect(component.onDropdown).toEqual(true);
+  });
+
+  it('should always focus on first child after view init', () => {
+    fixture.detectChanges();
+    jest.spyOn(component, 'focusFirstChild');
+
+    component.ngAfterViewInit();
+
+    expect(component.focusFirstChild).toBeCalledTimes(1);
+  });
+
+  it('should focus on first child on changes if there is a child', () => {
+    fixture.detectChanges();
+    jest.spyOn(component, 'focusFirstChild');
+
+    component.expanded = true;
+    component.ngOnChanges({ expanded: new SimpleChange(false, true, false) });
+
+    expect(component.focusFirstChild).toBeCalledTimes(1);
+  });
+
+  it('should not focus on first child on changes if there is not a child', () => {
+    fixture.detectChanges();
+    jest.spyOn(component, 'focusFirstChild');
+
+    component.expanded = true;
+    component.ngOnChanges({ expanded: new SimpleChange(false, false, false) });
+
+    expect(component.focusFirstChild).toBeCalledTimes(0);
+  });
+
+  it('should focus on first dropdown child', () => {
+    fixture.detectChanges();
+    jest.spyOn(component.dropdownElementRef.first.nativeElement, 'focus');
+    component.focusFirstChild(0, true);
+
+    expect(component.dropdownElementRef.get(0)?.nativeElement.focus).toBeCalledTimes(1);
+  });
+
+  it('should focus on first gsh level child', () => {
+    fixture.detectChanges();
+    jest.spyOn(component.gshLevelElementRef.first.nativeElement, 'focus');
+    component.focusFirstChild(0, false);
+
+    expect(component.gshLevelElementRef.get(0)?.nativeElement.focus).toBeCalledTimes(1);
+  });
+
+  it('should select parent dropdown child when out of bounds downwards', () => {
+    fixture.detectChanges();
+    const $event = {
+      direction: 'down',
+      currentSelected: 0,
+      onDropdown: true,
+    };
+
+    jest.spyOn(component.dropdownElementRef.get($event.currentSelected + 1)?.nativeElement as HTMLElement, 'focus');
+
+    component.detectOutOfBounds($event);
+
+    expect(component.dropdownElementRef.get($event.currentSelected + 1)?.nativeElement.focus).toBeCalledTimes(1);
+  });
+
+  it('should select parent gsh level child when out of bounds downwards', () => {
+    fixture.detectChanges();
+    const $event = {
+      direction: 'down',
+      currentSelected: 0,
+      onDropdown: false,
+    };
+
+    jest.spyOn(component.gshLevelElementRef.get($event.currentSelected + 1)?.nativeElement as HTMLElement, 'focus');
+
+    component.detectOutOfBounds($event);
+
+    expect(component.gshLevelElementRef.get($event.currentSelected + 1)?.nativeElement.focus).toBeCalledTimes(1);
+  });
+
+  it('should select parent dropdown when out of bounds upwards', () => {
+    fixture.detectChanges();
+    const $event = {
+      direction: 'up',
+      currentSelected: 0,
+      onDropdown: true,
+    };
+
+    jest.spyOn(component.dropdownElementRef.get($event.currentSelected)?.nativeElement as HTMLElement, 'focus');
+
+    component.detectOutOfBounds($event);
+
+    expect(component.dropdownElementRef.get($event.currentSelected)?.nativeElement.focus).toBeCalledTimes(1);
+  });
+
+  it('should select parent gsh level when out of bounds upwards', () => {
+    fixture.detectChanges();
+    const $event = {
+      direction: 'up',
+      currentSelected: 0,
+      onDropdown: false,
+    };
+
+    jest.spyOn(component.gshLevelElementRef.get($event.currentSelected)?.nativeElement as HTMLElement, 'focus');
+
+    component.detectOutOfBounds($event);
+
+    expect(component.gshLevelElementRef.get($event.currentSelected)?.nativeElement.focus).toBeCalledTimes(1);
+  });
+
+  it('should select dropdown on Enter keypress', () => {
+    fixture.detectChanges();
+    jest.spyOn(component as any, 'selectDropdown');
+
+    const $event = new KeyboardEvent('keydown', { code: 'Enter' });
+    const corp = { id: '', value: 'Corp', children: [] } as GSH;
+
+    component.navigateSelector($event, corp, 0);
+
+    expect(component['selectDropdown']).toBeCalledWith(corp, 0);
+  });
+
+  it('should focus on child gsh level if child has no dropdowns on Arrow Down keypress', () => {
+    fixture.detectChanges();
+    const currentSelected = 0;
+    jest.spyOn(component.childCmp.get(currentSelected)!, 'focusFirstChild');
+    component.expandedNodes[currentSelected] = true;
+
+    const $event = new KeyboardEvent('keydown', { code: 'ArrowDown' });
+    const fin = { id: '', value: 'Fin', children: [] } as GSH;
+    const corp = { id: '', value: 'Corp', children: [fin] } as GSH;
+
+    component.navigateSelector($event, corp, currentSelected);
+
+    expect(component.childCmp.get(currentSelected)?.focusFirstChild).toBeCalledTimes(1);
+    expect(component.childCmp.get(currentSelected)?.focusFirstChild).toBeCalledWith(currentSelected, true);
+  });
+
+  it('should emit downwards out of bounds event when at bottom of levels on Arrow Down keypress', () => {
+    fixture.detectChanges();
+    const currentSelected = 1;
+    jest.spyOn(component.outOfBounds, 'emit');
+
+    const $event = new KeyboardEvent('keydown', { code: 'ArrowDown' });
+    const fin = { id: '', value: 'Fin', children: [] } as GSH;
+    const corp = { id: '', value: 'Corp', children: [fin] } as GSH;
+
+    component.gshValues = [corp];
+
+    component.navigateSelector($event, corp, currentSelected);
+
+    expect(component.outOfBounds.emit).toBeCalledTimes(1);
+    expect(component.outOfBounds.emit).toBeCalledWith({ direction: 'down', currentSelected: component.parentPosition, onDropdown: component.onDropdown });
+  });
+
+  it('should select the next dropdown in level on Arrow Down keypress', () => {
+    fixture.detectChanges();
+    const currentSelected = 0;
+    jest.spyOn(component.dropdownElementRef.get(currentSelected + 1)?.nativeElement as HTMLElement, 'focus');
+
+    const $event = new KeyboardEvent('keydown', { code: 'ArrowDown' });
+    const fin = { id: '', value: 'Fin', children: [] } as GSH;
+    const corp = {id: '', value: 'Corp', children: [] } as GSH;
+
+    component.gshValues = [corp, fin];
+
+    component.navigateSelector($event, corp, currentSelected);
+
+    expect(component.dropdownElementRef.get(currentSelected + 1)?.nativeElement.focus).toBeCalledTimes(1);
+  });
+
+  it('should select the next gsh level in level on Arrow Down keypress', () => {
+    fixture.detectChanges();
+    const currentSelected = 0;
+    jest.spyOn(component.gshLevelElementRef.get(currentSelected + 1)?.nativeElement as HTMLElement, 'focus');
+
+    const $event = new KeyboardEvent('keydown', { code: 'ArrowDown' });
+    const fin = { id: '', value: 'Fin', children: [] } as GSH;
+    const corp = { id: '', value: 'Corp', children: [] } as GSH;
+
+    component.gshValues = [corp, fin];
+    component.onDropdown = false;
+
+    component.navigateSelector($event, corp, currentSelected);
+
+    expect(component.gshLevelElementRef.get(currentSelected + 1)?.nativeElement.focus).toBeCalledTimes(1);
+  });
+
+  it('should emit upwards out of bounds event when on a childless level on Arrow Up keypress', () => {
+    fixture.detectChanges();
+    const currentSelected = 0;
+    jest.spyOn(component.outOfBounds, 'emit');
+
+    const $event = new KeyboardEvent('keydown', { code: 'ArrowUp' });
+    const corp = { id: '', value: 'Corp', children: [] } as GSH;
+
+    component.gshValues = [corp];
+
+    component.navigateSelector($event, corp, currentSelected);
+
+    expect(component.outOfBounds.emit).toBeCalledTimes(1);
+    expect(component.outOfBounds.emit).toBeCalledWith({ direction: 'up', currentSelected: component.parentPosition, onDropdown: true });
+  });
+
+  it('should emit upwards out of bounds event when on the first gsh level on Arrow Up keypress', () => {
+    const currentSelected = 0;
+    jest.spyOn(component.outOfBounds, 'emit');
+
+    const $event = new KeyboardEvent('keydown', { code: 'ArrowUp' });
+    const corp = { id: '', value: 'Corp', children: [] } as GSH;
+
+    // jest.spyOn(component as any, 'findGSHLevel').mockReturnValue([corp]);
+    fixture.detectChanges();
+
+    // component.gshValues = [corp];
+
+    component.navigateSelector($event, corp, currentSelected);
+
+    expect(component.outOfBounds.emit).toBeCalledTimes(1);
+    expect(component.outOfBounds.emit).toBeCalledWith({ direction: 'up', currentSelected: component.parentPosition, onDropdown: false });
+  });
+
+  it('should select the above dropdown on Arrow Up keypress', () => {
+    fixture.detectChanges();
+    const currentSelected = 1;
+    jest.spyOn(component.dropdownElementRef.get(currentSelected - 1)?.nativeElement as HTMLElement, 'focus');
+
+    const $event = new KeyboardEvent('keydown', { code: 'ArrowUp' });
+    const corp = { id: '', value: 'Corp', children: [] } as GSH;
+
+    component.navigateSelector($event, corp, currentSelected);
+
+    expect(component.dropdownElementRef.get(currentSelected - 1)?.nativeElement.focus).toBeCalledTimes(1);
+  });
+
+  it('should select the above gsh level on Arrow Up keypress', () => {
+    fixture.detectChanges();
+    const currentSelected = 1;
+    component.onDropdown = false;
+    jest.spyOn(component.gshLevelElementRef.get(currentSelected - 1)?.nativeElement as HTMLElement, 'focus');
+
+    const $event = new KeyboardEvent('keydown', { code: 'ArrowUp' });
+    const corp = { id: '', value: 'Corp', children: [] } as GSH;
+
+    component.navigateSelector($event, corp, currentSelected);
+
+    expect(component.gshLevelElementRef.get(currentSelected - 1)?.nativeElement.focus).toBeCalledTimes(1);
+  });
+
+  it('should not select anything if on single childless gsh level on Arrow Left keypress', () => {
+    const currentSelected = 1;
+    const $event = new KeyboardEvent('keydown', { code: 'ArrowLeft' });
+    const corp = { id: '', value: 'Corp', children: [] } as GSH;
+
+    // jest.spyOn(component as any, 'findGSHLevel').mockReturnValue([corp]);
+    fixture.detectChanges();
+    jest.spyOn(component.dropdownElementRef, 'get');
+
+    component.navigateSelector($event, corp, currentSelected);
+
+    expect(component.dropdownElementRef.get).toBeCalledTimes(0);
+  });
+
+  it('should select the next dropdown if on childless gsh level on Arrow Left keypress', () => {
+    const currentSelected = 1;
+
+    const $event = new KeyboardEvent('keydown', { code: 'ArrowLeft' });
+    const advertising = { id: '', value: 'Advertising', children: [] } as GSH;
+    const agency = { id: '', value: 'Agency', children: [advertising] } as GSH;
+    const corp = { id: '', value: 'Corp', children: [] } as GSH;
+
+    jest.spyOn(component as any, 'findGSHLevel').mockReturnValue([agency, corp]);
+    fixture.detectChanges();
+    jest.spyOn(component.dropdownElementRef.get(currentSelected - 1)?.nativeElement as HTMLElement, 'focus');
+
+    component.navigateSelector($event, corp, currentSelected);
+
+    expect(component.dropdownElementRef.get(currentSelected - 1)?.nativeElement.focus).toBeCalledTimes(1);
+  });
+
+  it('should select the corresponding dropdown if no childless gsh level on Arrow Left keypress', () => {
+    const currentSelected = 0;
+
+    const $event = new KeyboardEvent('keydown', { code: 'ArrowLeft' });
+    const advertising = { id: '', value: 'Advertising', children: [] } as GSH;
+    const agency = { id: '', value: 'Agency', children: [advertising] } as GSH;
+
+    // jest.spyOn(component as any, 'findGSHLevel').mockReturnValue([agency]);
+    fixture.detectChanges();
+    jest.spyOn(component.dropdownElementRef.get(currentSelected)?.nativeElement as HTMLElement, 'focus');
+
+    component.navigateSelector($event, agency, currentSelected);
+
+    expect(component.dropdownElementRef.get(currentSelected)?.nativeElement.focus).toBeCalledTimes(1);
+    expect(component.onDropdown).toEqual(true);
+  });
+
+  it('should select the corresponding gsh level on Arrow Right keypress', () => {
+    const currentSelected = 0;
+
+    const $event = new KeyboardEvent('keydown', { code: 'ArrowRight' });
+    const agency = { id:'', value: 'Agency', children: [] } as GSH;
+
+    // jest.spyOn(component as any, 'findGSHLevel').mockReturnValue([agency]);
+    fixture.detectChanges();
+    jest.spyOn(component.gshLevelElementRef.get(currentSelected)?.nativeElement as HTMLElement, 'focus');
+
+    component.navigateSelector($event, agency, currentSelected);
+
+    expect(component.gshLevelElementRef.get(currentSelected)?.nativeElement.focus).toBeCalledTimes(1);
+    expect(component.onDropdown).toEqual(false);
+  });
+});
+
+
+
+
+
+
+
+
 selectLevel(selectedGSH: GSH, gshLevel: number): void {
     // Initialize an empty array to store the parent node values
     const parentValues: string[] = [];
