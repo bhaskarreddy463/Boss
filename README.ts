@@ -1,3 +1,36 @@
+import { ESGMetricsService } from '../esg-dashboard/esg-metrics.service';
+import { GshSelectorComponent } from './gsh-selector.component';
+
+import { Meta, moduleMetadata, StoryFn } from '@storybook/angular';
+import { of } from 'rxjs';
+import { provideMockStore } from '@ngrx/store/testing';
+import { selectorData } from './gsh-selector-data';
+
+export default {
+  title: 'Grids/GSH Selector',
+  tags: ['autodocs'],
+  component: GshSelectorComponent,
+  decorators: [
+    moduleMetadata({
+      imports: [],
+      providers:[{
+        provide: ESGMetricsService,
+        useValue: {
+          gshSelector: () => of(selectorData)
+        }
+      }]
+    }),
+  ],
+} as Meta<GshSelectorComponent>;
+
+const Template: StoryFn<GshSelectorComponent> = (args: GshSelectorComponent) => ({
+  props: args,
+  providors: [provideMockStore({})],
+});
+
+export const DefaultView = Object.assign(Template.bind({}), { order: 0 });
+
+
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CUSTOM_ELEMENTS_SCHEMA, SimpleChange } from '@angular/core';
 
