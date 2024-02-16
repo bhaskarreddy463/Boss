@@ -75,6 +75,21 @@ describe('GshWrapperComponent', () => {
 });
 
 
+<input #input
+        data-input
+        placeholder="Select value..."
+        type="text"
+        name="date"
+        inputId="text-input"
+        className="free-input" (keydown)="onKeydownFocusFirstElement()" [gsPopoverVisible]="true" #queryCustomInput="gsPopover" [gsPopoverShowTip]="false" gsPopoverPlacement="bottom-left"
+        gsPopoverClass="metrics-container__light-popover gsh-metrics-container__popover" gsPopover [gsPopoverBody]="gshSelector"/>
+
+<ng-template #gshSelector>
+    <metrics-gsh-selector #gshComp (predicateFilterChanged)="emitPredicateFilterChange($event)" [expanded]="true" class="custom-queryfield">
+    </metrics-gsh-selector>
+</ng-template>
+
+
 
 import { AfterViewInit, Component, ElementRef, EventEmitter, OnDestroy, Output, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
