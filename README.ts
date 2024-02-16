@@ -1,3 +1,81 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ElementRef, QueryList } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { GshWrapperComponent } from './gsh-wrapper.component';
+import { GshSelectorComponent } from '../../../gsh-selector/gsh-selector.component';
+import { PopoverModule, Popover } from '@gs-ux-uitoolkit-angular/popover';
+import { Subject } from 'rxjs';
+
+describe('GshWrapperComponent', () => {
+  let component: GshWrapperComponent;
+  let fixture: ComponentFixture<GshWrapperComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [CommonModule, FormsModule, PopoverModule],
+      declarations: [GshWrapperComponent, GshSelectorComponent],
+    }).compileComponents();
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(GshWrapperComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should emit predicate filter change when received from gsh selector', () => {
+    const mockValue = 'Mock Predicate Filter Value';
+    const emitSpy = spyOn(component.predicateFilterChanged, 'emit');
+
+    component.emitPredicateFilterChange(mockValue);
+
+    expect(emitSpy).toHaveBeenCalledWith(mockValue);
+  });
+
+  it('should open selector popover on ngAfterViewInit', () => {
+    const clickSpy = spyOn(component.input.nativeElement, 'click');
+    component.ngAfterViewInit();
+
+    expect(clickSpy).toHaveBeenCalled();
+  });
+
+  it('should focus first child of gsh selector on onKeydownFocusFirstElement', () => {
+    // Setup
+    const mockGshSelectorRef = {
+      first: {
+        focusFirstChild: jasmine.createSpy('focusFirstChild')
+      }
+    };
+    component.gshSelectorRef = new QueryList<GshSelectorComponent>();
+    (component.gshSelectorRef as any)._results = [mockGshSelectorRef];
+
+    // Action
+    component.onKeydownFocusFirstElement();
+
+    // Assertion
+    expect(mockGshSelectorRef.first.focusFirstChild).toHaveBeenCalledWith(0, true);
+  });
+
+  it('should destroy properly on ngOnDestroy', () => {
+    const popoverDestroySpy = spyOn(component.selectorPopover, 'ngOnDestroy').and.callThrough();
+    const destroyNextSpy = spyOn(component.destroy$, 'next');
+    const destroyCompleteSpy = spyOn(component.destroy$, 'complete');
+    
+    component.ngOnDestroy();
+
+    expect(popoverDestroySpy).toHaveBeenCalled();
+    expect(destroyNextSpy).toHaveBeenCalledWith(true);
+    expect(destroyCompleteSpy).toHaveBeenCalled();
+  });
+});
+
+
+
 import { AfterViewInit, Component, ElementRef, EventEmitter, OnDestroy, Output, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GshSelectorComponent } from '../../../gsh-selector/gsh-selector.component';
