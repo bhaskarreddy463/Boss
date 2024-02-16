@@ -1,3 +1,106 @@
+import { AfterViewInit, Component, ElementRef, EventEmitter, OnDestroy, Output, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { GshSelectorComponent } from '../../../gsh-selector/gsh-selector.component';
+import { Popover, PopoverModule } from '@gs-ux-uitoolkit-angular/popover';
+import { Subject } from 'rxjs';
+
+@Component({
+  selector: 'metrics-gsh-wrapper',
+  standalone: true,
+  imports: [CommonModule, PopoverModule, GshSelectorComponent],
+  templateUrl: './gsh-wrapper.component.html',
+})
+export class GshWrapperComponent implements AfterViewInit, OnDestroy {
+  @Output() readonly predicateFilterChanged: EventEmitter<string> = new EventEmitter();
+  @ViewChild('input', { static: true }) input!: ElementRef<HTMLInputElement>;
+  @ViewChild('queryCustomInput', { read: Popover }) selectorPopover!: Popover;
+  @ViewChildren('gshComp', {read: GshSelectorComponent}) gshSelectorRef!: QueryList<GshSelectorComponent>;
+  private destroy$: Subject<boolean> = new Subject();
+
+  ngAfterViewInit(): void {
+      this.input.nativeElement.click();
+  }
+
+  emitPredicateFilterChange(value: string): void {
+    this.predicateFilterChanged.emit(value);
+  }
+
+  onKeydownFocusFirstElement(): void {
+    if(this.gshSelectorRef && this.gshSelectorRef.length > 0){
+      const firsGshCompRef = this.gshSelectorRef.first;
+      firsGshCompRef.focusFirstChild(0, true);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.selectorPopover.ngOnDestroy();
+    this.destroy$.next(true);
+    this.destroy$.complete();
+  }
+}
+
+
+<input #input
+        data-input
+        placeholder="Select value..."
+        type="text"
+        name="date"
+        inputId="text-input"
+        className="free-input" (keydown)="onKeydownFocusFirstElement()" [gsPopoverVisible]="true" #queryCustomInput="gsPopover" [gsPopoverShowTip]="false" gsPopoverPlacement="bottom-left"
+        gsPopoverClass="metrics-container__light-popover gsh-metrics-container__popover" gsPopover [gsPopoverBody]="gshSelector"/>
+
+<ng-template #gshSelector>
+    <metrics-gsh-selector #gshComp (predicateFilterChanged)="emitPredicateFilterChange($event)" [expanded]="true" class="custom-queryfield">
+    </metrics-gsh-selector>
+</ng-template>
+
+
+
+import { CommonModule } from '@angular/common';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormsModule } from '@angular/forms';
+import { GshWrapperComponent } from './gsh-wrapper.component';
+import { PopoverModule } from '@gs-ux-uitoolkit-angular/popover';
+
+describe('GshWrapperComponent', () => {
+  let component: GshWrapperComponent;
+  let fixture: ComponentFixture<GshWrapperComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [GshWrapperComponent, CommonModule, FormsModule, PopoverModule],
+    }).compileComponents();
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(GshWrapperComponent);
+    component = fixture.componentInstance;
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should emit predicate filter change when received from gsh selector', () => {
+    const mockValue = 'Mock Predicate Filter Value';
+
+    jest.spyOn(component.predicateFilterChanged, 'emit');
+
+    component.emitPredicateFilterChange(mockValue);
+
+    expect(component.predicateFilterChanged.emit).toHaveBeenCalledWith(mockValue);
+  });
+
+  it('should open selector popover on ngAfterViewInit', () => {
+    jest.spyOn(component.input.nativeElement, 'click');
+    component.ngAfterViewInit();
+
+    expect(component.input.nativeElement.click).toHaveBeenCalled();
+  });
+});
+
+
+
 @if(gshValues.length){
     <div [hidden]="!expanded && gshLevel !== 3">
         <gs-label [classes]="{ label: overrideClasses.label}"><strong>{{ gshLevelLabel }}</strong></gs-label>
