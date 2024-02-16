@@ -30,7 +30,7 @@ describe('GshWrapperComponent', () => {
 
   it('should emit predicate filter change when received from gsh selector', () => {
     const mockValue = 'Mock Predicate Filter Value';
-    const emitSpy = spyOn(component.predicateFilterChanged, 'emit');
+    const emitSpy = jest.spyOn(component.predicateFilterChanged, 'emit');
 
     component.emitPredicateFilterChange(mockValue);
 
@@ -38,7 +38,7 @@ describe('GshWrapperComponent', () => {
   });
 
   it('should open selector popover on ngAfterViewInit', () => {
-    const clickSpy = spyOn(component.input.nativeElement, 'click');
+    const clickSpy = jest.spyOn(component.input.nativeElement, 'click');
     component.ngAfterViewInit();
 
     expect(clickSpy).toHaveBeenCalled();
@@ -48,7 +48,7 @@ describe('GshWrapperComponent', () => {
     // Setup
     const mockGshSelectorRef = {
       first: {
-        focusFirstChild: jasmine.createSpy('focusFirstChild')
+        focusFirstChild: jest.fn()
       }
     };
     component.gshSelectorRef = new QueryList<GshSelectorComponent>();
@@ -62,17 +62,21 @@ describe('GshWrapperComponent', () => {
   });
 
   it('should destroy properly on ngOnDestroy', () => {
-    const popoverDestroySpy = spyOn(component.selectorPopover, 'ngOnDestroy').and.callThrough();
-    const destroyNextSpy = spyOn(component.destroy$, 'next');
-    const destroyCompleteSpy = spyOn(component.destroy$, 'complete');
+    // Setup
+    const selectorPopoverDestroySpy = jest.spyOn(component.selectorPopover, 'ngOnDestroy');
+    const destroyNextSpy = jest.spyOn(component.destroy$, 'next');
+    const destroyCompleteSpy = jest.spyOn(component.destroy$, 'complete');
     
+    // Action
     component.ngOnDestroy();
 
-    expect(popoverDestroySpy).toHaveBeenCalled();
+    // Assertion
+    expect(selectorPopoverDestroySpy).toHaveBeenCalled();
     expect(destroyNextSpy).toHaveBeenCalledWith(true);
     expect(destroyCompleteSpy).toHaveBeenCalled();
   });
 });
+
 
 
 <input #input
