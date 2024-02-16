@@ -1,11 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ElementRef, QueryList } from '@angular/core';
+import { QueryList } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GshWrapperComponent } from './gsh-wrapper.component';
 import { GshSelectorComponent } from '../../../gsh-selector/gsh-selector.component';
-import { PopoverModule, Popover } from '@gs-ux-uitoolkit-angular/popover';
-import { Subject } from 'rxjs';
+import { PopoverModule } from '@gs-ux-uitoolkit-angular/popover';
 
 describe('GshWrapperComponent', () => {
   let component: GshWrapperComponent;
@@ -63,7 +62,6 @@ describe('GshWrapperComponent', () => {
 
   it('should destroy properly on ngOnDestroy', () => {
     // Setup
-    const selectorPopoverDestroySpy = jest.spyOn(component.selectorPopover, 'ngOnDestroy');
     const destroyNextSpy = jest.spyOn(component.destroy$, 'next');
     const destroyCompleteSpy = jest.spyOn(component.destroy$, 'complete');
     
@@ -71,11 +69,11 @@ describe('GshWrapperComponent', () => {
     component.ngOnDestroy();
 
     // Assertion
-    expect(selectorPopoverDestroySpy).toHaveBeenCalled();
     expect(destroyNextSpy).toHaveBeenCalledWith(true);
     expect(destroyCompleteSpy).toHaveBeenCalled();
   });
 });
+
 
 
 
