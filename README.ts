@@ -1,808 +1,1814 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { QueryList } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { GshWrapperComponent } from './gsh-wrapper.component';
-import { GshSelectorComponent } from '../../../gsh-selector/gsh-selector.component';
-import { PopoverModule } from '@gs-ux-uitoolkit-angular/popover';
-
-describe('GshWrapperComponent', () => {
-  let component: GshWrapperComponent;
-  let fixture: ComponentFixture<GshWrapperComponent>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [CommonModule, FormsModule, PopoverModule],
-      declarations: [GshWrapperComponent, GshSelectorComponent],
-    }).compileComponents();
-  });
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(GshWrapperComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('should emit predicate filter change when received from gsh selector', () => {
-    const mockValue = 'Mock Predicate Filter Value';
-    const emitSpy = jest.spyOn(component.predicateFilterChanged, 'emit');
-
-    component.emitPredicateFilterChange(mockValue);
-
-    expect(emitSpy).toHaveBeenCalledWith(mockValue);
-  });
-
-  it('should open selector popover on ngAfterViewInit', () => {
-    const clickSpy = jest.spyOn(component.input.nativeElement, 'click');
-    component.ngAfterViewInit();
-
-    expect(clickSpy).toHaveBeenCalled();
-  });
-
-  it('should focus first child of gsh selector on onKeydownFocusFirstElement', () => {
-    // Setup
-    const mockGshSelectorRef = {
-      first: {
-        focusFirstChild: jest.fn()
-      }
-    };
-    component.gshSelectorRef = new QueryList<GshSelectorComponent>();
-    (component.gshSelectorRef as any)._results = [mockGshSelectorRef];
-
-    // Action
-    component.onKeydownFocusFirstElement();
-
-    // Assertion
-    expect(mockGshSelectorRef.first.focusFirstChild).toHaveBeenCalledWith(0, true);
-  });
-
-  it('should destroy properly on ngOnDestroy', () => {
-    // Setup
-    const destroyNextSpy = jest.spyOn(component.destroy$, 'next');
-    const destroyCompleteSpy = jest.spyOn(component.destroy$, 'complete');
-    
-    // Action
-    component.ngOnDestroy();
-
-    // Assertion
-    expect(destroyNextSpy).toHaveBeenCalledWith(true);
-    expect(destroyCompleteSpy).toHaveBeenCalled();
-  });
-});
-
-
-
-
-<input #input
-        data-input
-        placeholder="Select value..."
-        type="text"
-        name="date"
-        inputId="text-input"
-        className="free-input" (keydown)="onKeydownFocusFirstElement()" [gsPopoverVisible]="true" #queryCustomInput="gsPopover" [gsPopoverShowTip]="false" gsPopoverPlacement="bottom-left"
-        gsPopoverClass="metrics-container__light-popover gsh-metrics-container__popover" gsPopover [gsPopoverBody]="gshSelector"/>
-
-<ng-template #gshSelector>
-    <metrics-gsh-selector #gshComp (predicateFilterChanged)="emitPredicateFilterChange($event)" [expanded]="true" class="custom-queryfield">
-    </metrics-gsh-selector>
-</ng-template>
-
-
-
-import { AfterViewInit, Component, ElementRef, EventEmitter, OnDestroy, Output, QueryList, ViewChild, ViewChildren } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { GshSelectorComponent } from '../../../gsh-selector/gsh-selector.component';
-import { Popover, PopoverModule } from '@gs-ux-uitoolkit-angular/popover';
-import { Subject } from 'rxjs';
-
-@Component({
-  selector: 'metrics-gsh-wrapper',
-  standalone: true,
-  imports: [CommonModule, PopoverModule, GshSelectorComponent],
-  templateUrl: './gsh-wrapper.component.html',
-})
-export class GshWrapperComponent implements AfterViewInit, OnDestroy {
-  @Output() readonly predicateFilterChanged: EventEmitter<string> = new EventEmitter();
-  @ViewChild('input', { static: true }) input!: ElementRef<HTMLInputElement>;
-  @ViewChild('queryCustomInput', { read: Popover }) selectorPopover!: Popover;
-  @ViewChildren('gshComp', {read: GshSelectorComponent}) gshSelectorRef!: QueryList<GshSelectorComponent>;
-  private destroy$: Subject<boolean> = new Subject();
-
-  ngAfterViewInit(): void {
-      this.input.nativeElement.click();
-  }
-
-  emitPredicateFilterChange(value: string): void {
-    this.predicateFilterChanged.emit(value);
-  }
-
-  onKeydownFocusFirstElement(): void {
-    if(this.gshSelectorRef && this.gshSelectorRef.length > 0){
-      const firsGshCompRef = this.gshSelectorRef.first;
-      firsGshCompRef.focusFirstChild(0, true);
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.selectorPopover.ngOnDestroy();
-    this.destroy$.next(true);
-    this.destroy$.complete();
-  }
-}
-
-
-<input #input
-        data-input
-        placeholder="Select value..."
-        type="text"
-        name="date"
-        inputId="text-input"
-        className="free-input" (keydown)="onKeydownFocusFirstElement()" [gsPopoverVisible]="true" #queryCustomInput="gsPopover" [gsPopoverShowTip]="false" gsPopoverPlacement="bottom-left"
-        gsPopoverClass="metrics-container__light-popover gsh-metrics-container__popover" gsPopover [gsPopoverBody]="gshSelector"/>
-
-<ng-template #gshSelector>
-    <metrics-gsh-selector #gshComp (predicateFilterChanged)="emitPredicateFilterChange($event)" [expanded]="true" class="custom-queryfield">
-    </metrics-gsh-selector>
-</ng-template>
-
-
-
-import { CommonModule } from '@angular/common';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
-import { GshWrapperComponent } from './gsh-wrapper.component';
-import { PopoverModule } from '@gs-ux-uitoolkit-angular/popover';
-
-describe('GshWrapperComponent', () => {
-  let component: GshWrapperComponent;
-  let fixture: ComponentFixture<GshWrapperComponent>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [GshWrapperComponent, CommonModule, FormsModule, PopoverModule],
-    }).compileComponents();
-  });
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(GshWrapperComponent);
-    component = fixture.componentInstance;
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('should emit predicate filter change when received from gsh selector', () => {
-    const mockValue = 'Mock Predicate Filter Value';
-
-    jest.spyOn(component.predicateFilterChanged, 'emit');
-
-    component.emitPredicateFilterChange(mockValue);
-
-    expect(component.predicateFilterChanged.emit).toHaveBeenCalledWith(mockValue);
-  });
-
-  it('should open selector popover on ngAfterViewInit', () => {
-    jest.spyOn(component.input.nativeElement, 'click');
-    component.ngAfterViewInit();
-
-    expect(component.input.nativeElement.click).toHaveBeenCalled();
-  });
-});
-
-
-
-@if(gshValues.length){
-    <div [hidden]="!expanded && gshLevel !== 3">
-        <gs-label [classes]="{ label: overrideClasses.label}"><strong>{{ gshLevelLabel }}</strong></gs-label>
-        @for(gsh of gshValues; track $index) {
-            <div class="gsh-row row g-0" (keydown)="navigateSelector($event, gsh, $index)">
-                <div autofocus tabindex="0" #dropdownButton [class]="'col-auto dropdown-button-' + (gshLevel-2)" *ngIf="gsh.children.length" (click)="selectDropdown(gsh, $index, dropdownButton); $event.stopPropagation()" (keydown.enter)="selectDropdown(gsh, $index, dropdownButton); $event.stopPropagation()">
-                    <gs-icon [ngStyle]="gsh.clicked ? { 'rotate': '90deg' } : {}" name="chevron-right" type="filled"
-                        size="sm"></gs-icon>
-                </div>
-                <!-- div with ngIf on gsh.children.length -->
-                <div tabindex="0" #dropdownButton *ngIf="!gsh.children.length" [class]="'col-auto childless-dropdown-' + (gshLevel-2)"></div>
-                <div tabindex="0" #gshLevelButton class="d-flex flex-column flex=1"
-                    [class]="gsh.children.length ? 'col gsh-button' : 'col gsh-button gsh-button__childless-' + (gshLevel-2)"
-                    (click)="selectLevel(gsh)" (keydown.enter)="selectLevel(gsh); $event.stopPropagation()">
-                    <div class="key-label">{{ gsh.value }}</div>
-                    <div class="sub-label">Enter to select this item</div>
-                </div>
-            </div>
-            @if(gsh.children.length) {
-                <metrics-gsh-selector #childCmp (predicateFilterChanged)="emitPredicateFilterChange($event)" [expanded]="expandedNodes[$index]" [gshLevel]="gshLevel+1" [gshChildren]="gsh.children" (outOfBounds)="detectOutOfBounds($event)"></metrics-gsh-selector>
-            }
-        }
-    </div>
-} @else {
-    <gs-loading-icon size="sm" shape="circle" color="gray" label="Loading"></gs-loading-icon>
-}
-
-
-
-
+/* eslint-disable max-lines */
+import { Actions } from '@ngrx/effects';
+import { AlertModule } from '@gs-ux-uitoolkit-angular/alert';
+import { AllModules } from '@gs-ux-uitoolkit-angular/datagrid-modules';
+import { ButtonComponent, ButtonModule } from '@gs-ux-uitoolkit-angular/button';
+import { catchError, finalize, NEVER, Subject, takeUntil } from 'rxjs';
 import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  EventEmitter,
-  Input,
-  OnChanges,
-  OnDestroy,
-  OnInit,
-  Output,
-  QueryList,
-  SimpleChanges,
-  ViewChildren,
-} from '@angular/core';
-import { ButtonModule } from '@gs-ux-uitoolkit-angular/button';
+  clone,
+  compact,
+  every,
+  find,
+  findIndex,
+  first,
+  flatten,
+  get,
+  groupBy,
+  intersection,
+  isEqual,
+  isEqualWith,
+  join,
+  keyBy,
+  keys,
+  last,
+  map,
+  reduce,
+  some,
+  uniq,
+  uniqBy,
+} from 'lodash-es';
+import {
+  ColDef,
+  ColGroupDef,
+  ColumnState,
+  DataGridApi,
+  DataGridModule,
+  DataGridState,
+  Events,
+  GetRowIdParams,
+  GridOptions,
+  GSNumberFloatingFilter,
+  ICellRendererParams,
+  IRowNode,
+  IServerSideDatasource,
+  IServerSideGetRowsParams,
+  ModelUpdatedEvent,
+  RegistryAndStoreContextArgs,
+  RowNode,
+  ValueFormatterFunc,
+  ValueFormatterParams,
+  ValueGetterParams,
+} from '@gs-ux-uitoolkit-angular/datagrid';
 import { colors } from '@gs-ux-uitoolkit-common/design-system';
 import { CommonModule } from '@angular/common';
+import { Component, ElementRef, Inject, Input, LOCALE_ID, OnChanges, OnDestroy, OnInit, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
 import { CssClasses, StyleSheet } from '@gs-ux-uitoolkit-common/style';
-import { ESGMetricsService } from '../esg-dashboard/esg-metrics.service';
-import { FIConstants } from '@gsam-fi/common';
-import { FiPixels } from '@gsam-fi/common/design-system';
+import { DataToolbarModule } from '@gs-ux-uitoolkit-angular/datatoolbar';
+import { DateTime, Duration } from 'luxon';
+import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { IconModule } from '@gs-ux-uitoolkit-angular/icon-font';
 import { LabelModule } from '@gs-ux-uitoolkit-angular/label';
+import { lightTheme } from '@gs-ux-uitoolkit-common/theme';
 import { LoadingModule } from '@gs-ux-uitoolkit-angular/loading';
-import { map, Subject, takeUntil } from 'rxjs';
-import { MenuModule } from '@gs-ux-uitoolkit-angular/menu';
-import { PopoverModule } from '@gs-ux-uitoolkit-angular/popover';
-import { TreeModule } from '@gs-ux-uitoolkit-angular/tree';
+import { MenuBlurEvent, MenuModule } from '@gs-ux-uitoolkit-angular/menu';
+import { moveItemInArray } from '@angular/cdk/drag-drop';
+import { NgbModal, NgbModalModule, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { Popover, PopoverModule } from '@gs-ux-uitoolkit-angular/popover';
+import { PredicateInQuery, PredicateInQueryWithID, QueryfieldPredicateConfig } from '@gs-ux-uitoolkit-angular/queryfield';
+import { select, Store } from '@ngrx/store';
+import { ThemeModule } from '@gs-ux-uitoolkit-angular/theme';
 
-const overrideStyleSheet = new StyleSheet('gsh-label-override', {
-  label: { color: colors.gray060, backgroundColor: colors.gray020, paddingLeft: FiPixels.SIXTEEN, marginBottom: FiPixels.ZERO },
+import { AggregationFieldType, BucketGroupFilterModel, BucketGrouping, Column, ColumnCategories, ColumnPacket, RowGroupAggField } from '@gsam-fi/grids/typings';
+import { FIConstants, GsAnalyticsActions, GsAnalyticsProperties, GsAnalyticsService } from '@gsam-fi/common';
+import { FiGridControlsModule, GroupByOption } from '@gsam-fi/grids/angular';
+import { FiPixels } from '@gsam-fi/common/design-system';
+
+import {
+  AgGridAllowedDimensionsOperatorsTranslation,
+  ALLOWED_DIMENSIONS_SEPARATOR,
+  AllowedDimension,
+  AllowedDimensionsOperators,
+  AllowedDimensionsOperatorsAgGridTranslation,
+  AllowedDimensionTypes,
+  DashboardDatasets,
+  DashboardType,
+} from '../typings/saved-dashboards.typings';
+import { AnalyticsEvents, AnalyticsProperties, AnalyticsToggleState } from '../../analytics.events';
+import { ColumnPickerComponent } from '../column-picker/column-picker.component';
+import { ESGMetricsService } from '../esg-dashboard/esg-metrics.service';
+import { FilterBarComponent } from '../filter-bar/filter-bar.component';
+import { formatDecimals, formatNegatives, getColumnByIdentifier, recurseColumnFields, stripingColumnHeader } from '../helpers/grid.helper';
+import { getGridSettingsInSession } from '../store/selectors/grid-settings.selectors';
+import { getPlatformExposureInf, getProductsInf } from '../store/selectors/positions-grid-configuration.selectors';
+import { GridSettingsComponent } from '../global-settings/grid-settings/grid-settings.component';
+import { GridSettingsState } from '../typings/grid-settings.typing';
+import { IncludeBenchmarksComponent } from '../include-benchmarks/include-benchmarks.component';
+import { MetricDropdownModule } from '../metric-dropdown/metric-dropdown.module';
+import { MetricsBucket } from '../typings/buckets.typings';
+import { MetricsLabels, MetricSource, MetricsPnLLabels } from '../typings/metrics.typings';
+import { PartialServerColDef, PositionalColumn } from '../typings/positions-grid.typings';
+import { PositionsService } from '../services/positions.service';
+import { ProductsPayload } from '../typings/products-service.typings';
+import { shouldBlurElementBeVisible } from '../helpers/gs-button.helper';
+import { Source, SourceType } from '../global-settings/account-groups/account-groups.typings';
+import { ViewsService } from '../services/views.service';
+import { ViewState } from '../typings/views.typings';
+
+const overrideStyleSheet = new StyleSheet('products-grid-popover-styles', {
+  settingsPopover: {
+    paddingLeft: FiPixels.TWELVE,
+    paddingRight: FiPixels.TWELVE,
+    paddingTop: FiPixels.TWELVE,
+    paddingBottom: FiPixels.SIXTEEN,
+    backgroundColor: colors.white,
+  },
 });
 
-export interface GSH {
-  id: string;
-  value: string;
-  children: GSH[];
-  clicked?: boolean;
-}
+const positioningColumnSet = { categoryId: 'accountPositioning', packetId: 'accountPositioning' };
+const defaultColumnPackets: { categoryId: string; packetId: string; columns?: string[] }[] = [
+  { categoryId: 'productIdentifiers', packetId: 'productIdentifiers', columns: ['LongDescription', 'BBTicker'] },
+  positioningColumnSet,
+  { categoryId: 'basicAttributes', packetId: 'econData' },
+  { categoryId: 'basicAttributes', packetId: 'bondCharacteristics' },
+];
+const platformExposureColumnPackets: { categoryId: string; packetId: string; columns?: string[] }[] = [
+  { categoryId: 'identifiers', packetId: 'identifiers', columns: ['LongDescription'] },
+  { categoryId: 'basicAttributes', packetId: 'econData' },
+  { categoryId: 'accountNonFinancials', packetId: 'bondCharacteristics' },
+];
+const TOTALS = 'TOTALS';
 
 @Component({
-  selector: 'metrics-gsh-selector',
-  templateUrl: 'gsh-selector.component.html',
-  styleUrls: ['./gsh-selector.component.scss'],
-  imports: [ButtonModule, CommonModule, IconModule, LabelModule, PopoverModule, TreeModule, MenuModule, LoadingModule],
+  selector: 'metrics-products-grid',
+  imports: [
+    AlertModule,
+    ButtonModule,
+    CommonModule,
+    DataGridModule,
+    DataToolbarModule,
+    FiGridControlsModule,
+    FormsModule,
+    IconModule,
+    LabelModule,
+    LoadingModule,
+    NgbModalModule,
+    MetricDropdownModule,
+    MenuModule,
+    PopoverModule,
+    ThemeModule,
+
+    ColumnPickerComponent,
+    FilterBarComponent,
+    GridSettingsComponent,
+    IncludeBenchmarksComponent,
+  ],
+  templateUrl: './products-grid.component.html',
+  styleUrl: './products-grid.component.scss',
   standalone: true,
 })
-export class GshSelectorComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
-  @Input() expanded: boolean | undefined;
-  @Input() gshLevel: number = 3;
-  @Input() gshChildren: GSH[] | undefined;
-  @Output() readonly predicateFilterChanged: EventEmitter<string> = new EventEmitter();
-  @Output() readonly outOfBounds: EventEmitter<{ direction: string; currentSelected: number; onDropdown: boolean }> = new EventEmitter();
-  @ViewChildren('gshLevelButton', { read: ElementRef }) gshLevelElementRef!: QueryList<ElementRef<HTMLDivElement>>;
-  @ViewChildren('dropdownButton', { read: ElementRef }) dropdownElementRef!: QueryList<ElementRef<HTMLDivElement>>;
-  @ViewChildren('childCmp', { read: GshSelectorComponent }) childCmp!: QueryList<GshSelectorComponent>;
-  gshLevelLabel: string | undefined;
-  gshValues: GSH[] = [];
-  selectedHasChildren: boolean | undefined;
-  parent: GSH | undefined;
+export class ProductsGridComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() accountGroups: Record<string, Source[]> = {};
+  @Input() allowColumnSelection = false;
+  @Input() allowFilterBar = true;
+  @Input() allowMetricsSelection = false;
+  @Input() availableMetrics: MetricsBucket[] = [];
+  @Input() drillDownDefinition!: Column['drillDownDefinition'];
+  @Input() filters: PredicateInQueryWithID[] = [];
+  @Input() generateAvailableMetrics = false;
+  @Input() gridSettings: GridSettingsState = {};
+  @Input() isDrillDown = false;
+  @Input() selectedDatasets: DashboardDatasets | undefined = { accounts: [], accountGroups: [], analysts: [], benchmarks: [] };
+  @Input() selectedMetrics: Record<string, { sources: MetricSource['fieldName'][]; fields: RowGroupAggField['displayName'][] }> = {
+    sizingAndContribution: { sources: ['act', 'net'], fields: ['MV %'] },
+    profitAndLoss: { sources: [], fields: [] },
+  };
+  @Input() selectedPositioningColumns: PositionalColumn[] = [];
+  @Input() showIncludeBenchmarksToggle = true;
+  @Input() predicates: PredicateInQueryWithID[] = [];
+  @Input() provideSpaceForFullScreenToggle = false;
+  @Input() view!: ViewState | undefined;
+  @ViewChild('toggleSettings', { read: Popover }) settingsPopover!: Popover;
+  @ViewChild('filterBar', { read: ElementRef, static: false }) filterBar!: ElementRef<HTMLDivElement>;
+  allowGrouping = false;
+  availablePnL: RowGroupAggField[] = [];
+  dataGridApi!: DataGridApi;
+  datagridModules = AllModules;
+  loading = false;
+  errorCode = 0;
+  errorMessage = '';
+  filterBarActive = true;
+  filterOptions: { dimension: AllowedDimension; column: Column }[] = [];
+  filterPredicates: QueryfieldPredicateConfig[] = [];
+  registryAndStore!: RegistryAndStoreContextArgs;
+  defaultGridState: Partial<DataGridState> = {
+    zebraStripes: {
+      stripeInterval: 0,
+    },
+  };
+  groupByTitle = false;
+  lightTheme = lightTheme;
   overrideClasses!: CssClasses<typeof overrideStyleSheet>;
-  parentPosition!: number;
-  prevSelected: GSH | undefined;
-  onDropdown!: boolean;
-  expandedNodes: { [level: number]: boolean } = {};
-  private destroy$: Subject<boolean> = new Subject();
+  processedExportRows = 0;
+  exportInProgress = false;
+  heldOnlyProducts = true;
+  includeBenchmarkWeights = true;
+  columnCatalogue: ColumnCategories[] = [];
+  columnMenuVisible = false;
+  gridReady = false;
+  groupByOptions: (GroupByOption & { bucketGrouping?: BucketGrouping })[] = [];
+  totalRows = 0;
+  datasource: IServerSideDatasource = {
+    // eslint-disable-next-line complexity
+    getRows: (params) => {
+      const INITIAL_ROW_GROUPS = ['GSHLevel1'];
+      const invest1Ids = uniq(compact(map(this.processGroupsInPositioningColumns(this.selectedPositioningColumns), 'value')));
+      this.errorCode = 0;
+      if ((every(this.selectedDatasets, (dataset) => dataset.length === 0) && !this.predicates.length) || !this.view) {
+        this.totalRows = 0;
+        params.fail();
 
-  constructor(private readonly metricsService: ESGMetricsService) {}
-
-  //this will be called for every child component
-  ngOnInit(): void {
-    this.overrideClasses = overrideStyleSheet.mount(this, FIConstants.NULL);
-    this.gshLevelLabel = `L${this.gshLevel}`;
-
-    if (this.gshChildren) {
-      this.gshValues = this.gshChildren;
-    }
-
-    if (!this.gshLevel) {
-      this.gshLevel = 3;
-    }
-
-    this.onDropdown = true;
-
-    if (this.gshValues.length === 0) {
-      this.loadGSHLevels();
-    }
-  }
-
-  private loadGSHLevels(): void {
-    this.metricsService
-      .gshSelector('TOTALS,FI', 4)
-      .pipe(
-        takeUntil(this.destroy$),
-        map((response) => {
-          return Object.entries(response).map(([key, value]) => this.formatLevels(new Map<string, object>().set(key, value as object)));
-        }),
-      )
-      .subscribe((gshValues) => {
-        this.gshValues.push(...gshValues);
-      });
-  }
-
-  ngOnDestroy(): void {
-    console.log('test');
-    overrideStyleSheet.unmount(this);
-    this.destroy$.next(true);
-    this.destroy$.complete();
-  }
-
-  private formatLevels(level: Map<string, object>, parentValues: string[] = []): GSH {
-    const gsh = <GSH>{
-      id:'',
-      value: '',
-      children: [],
-    };
-
-    gsh.value = level.keys().next().value;
-    gsh.children = [];
-    gsh.id = [...parentValues, gsh.value].join('|');
-    const children = level.values().next().value as object;
-    const childMap = new Map<string, object>(Object.entries(children));
-    if (!children) {
-      return gsh;
-    }
-
-    const childCondition = Object.keys(children).length;
-    if (childCondition > 0) {
-      Object.keys(children).forEach((key) => gsh.children.push(this.formatLevels(new Map<string, object>().set(key, childMap.get(key) || {}), [...parentValues, gsh.value])));
-    }
-
-    return gsh;
-  }
-
-  // to run on first
-  ngAfterViewInit(): void {
-    this.focusFirstChild(this.parentPosition, true);
-  }
-
-  emitPredicateFilterChange(value: string): void {
-    this.predicateFilterChanged.emit(value);
-  }
-
-  selectLevel(selectedGSH: GSH): void {
-    this.emitPredicateFilterChange(selectedGSH.id);
-  }
-
-  //to run on all after
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes.expanded.currentValue && this.expanded && this.dropdownElementRef?.length) {
-      this.focusFirstChild(this.parentPosition, this.onDropdown);
-    }
-  }
-
-  //called by afterView + onChanges
-  focusFirstChild(parentPosition = 0, onDropdown = false): void {
-    this.parentPosition = parentPosition;
-
-    if (onDropdown) {
-      this.dropdownElementRef.get(0)?.nativeElement.focus();
-    } else {
-      this.gshLevelElementRef.get(0)?.nativeElement.focus();
-    }
-  }
-
-  // new clicked logic
-  selectDropdown(gsh: GSH, currentSelected: number, dropdownButtonRef: HTMLDivElement): void {
-    if (this.onDropdown) {
-      let currentClosed = false;
-      //check if any others are expanded and if so close them
-      for (const expanded in this.expandedNodes) {
-        if (this.expandedNodes[expanded]) {
-          if (this.gshValues[expanded] === gsh) {
-            currentClosed = true;
-          }
-          this.expandedNodes[expanded] = false;
-          this.gshValues[expanded].clicked = false;
-        }
-      }
-
-      if (currentClosed) {
         return;
       }
 
-      // breaks those above childless
-      dropdownButtonRef.click();
-      gsh.clicked = true;
-      this.expandedNodes[currentSelected] = true;
-    } else {
-      this.gshLevelElementRef.get(currentSelected)?.nativeElement.click();
-    }
-  }
+      let rowGroupAggs: Partial<RowGroupAggField>[] = [];
+      const nonVisibleColumns: (string | undefined)[] = [...this.idColumns];
 
-  detectOutOfBounds($event: { direction: string; currentSelected: number; onDropdown: boolean }): void {
-    if ($event.direction === 'down') {
-      if ($event.onDropdown) {
-        this.dropdownElementRef.get($event.currentSelected + 1)?.nativeElement.focus();
-      } else {
-        this.gshLevelElementRef.get($event.currentSelected + 1)?.nativeElement.focus();
+      if (
+        this.allowMetricsSelection &&
+        some(Object.values(this.selectedMetrics), (selectedMetric) => selectedMetric.fields?.length && selectedMetric.sources?.length)
+      ) {
+        rowGroupAggs = this.positionsService.generateInvest1IdRowGroupAggs(invest1Ids, this.selectedMetrics, this.availableMetrics);
       }
-    } else if ($event.direction === 'up') {
-      if ($event.onDropdown) {
-        this.dropdownElementRef.get($event.currentSelected)?.nativeElement.focus();
-      } else {
-        this.gshLevelElementRef.get($event.currentSelected)?.nativeElement.focus();
+
+      if (this.generateAvailableMetrics) {
+        const selectedMetrics = this.availableMetrics.reduce(
+          (previousValue: Record<string, { sources: MetricSource['fieldName'][]; fields: RowGroupAggField['displayName'][] }>, currentValue) => {
+            if (!previousValue[currentValue.id]) {
+              previousValue[currentValue.id] = {
+                fields: currentValue.fields.map((field) => field.displayName),
+                sources: currentValue.sources.map((source) => source.fieldName),
+              };
+            }
+
+            return previousValue;
+          },
+          {},
+        );
+        rowGroupAggs = this.positionsService.generateRowGroupAggs(selectedMetrics, this.availableMetrics);
       }
-    }
-  }
 
-  navigateSelector($event: KeyboardEvent, gsh: GSH, currentSelected: number, dropdownButton?: HTMLDivElement): void {
-    $event.preventDefault();
+      rowGroupAggs.forEach((rowGroupAgg) => {
+        nonVisibleColumns.push(rowGroupAgg.weightedFieldName, rowGroupAgg.weightedFieldToScaleBy, rowGroupAgg.fieldName);
+      });
 
-    if (!this.gshLevelElementRef) {
+      const bucketGrouping = reduce(
+        this.selectedGroupByOptions,
+        (runningBucketGrouping: Record<string, BucketGrouping>, currentGrouping) => {
+          const groupOption = find(this.groupByOptions, { value: currentGrouping.value });
+
+          if (groupOption?.bucketGrouping) {
+            runningBucketGrouping[groupOption.bucketGrouping.bucketedField] = groupOption.bucketGrouping;
+          }
+
+          return runningBucketGrouping;
+        },
+        {},
+      );
+
+      const rowGroups = INITIAL_ROW_GROUPS.concat(
+        map(this.selectedGroupByOptions, (currentGrouping) => {
+          const groupOption = find(this.groupByOptions, { value: currentGrouping.value });
+
+          if (groupOption?.bucketGrouping) {
+            return groupOption.bucketGrouping.bucketedField;
+          }
+
+          return currentGrouping.value;
+        }),
+      );
+
+      nonVisibleColumns.push(...rowGroups);
+
+      if (this.selectedGroupByOptions.length && !params.request.sortModel?.length && params.request.groupKeys?.length) {
+        // row groups will always be at least 1 due to TOTALS, we minus 1 to take it back to the user selected options length
+        const groupingLevel = params.request.groupKeys.length - 1;
+
+        if (this.selectedGroupByOptions[groupingLevel]) {
+          params.request.sortModel = [
+            {
+              colId: this.selectedGroupByOptions[groupingLevel].value,
+              sort: 'asc',
+            },
+          ];
+        }
+      }
+
+      const datasets: DashboardDatasets = this.selectedDatasets || { accounts: [], accountGroups: [], benchmarks: [], analysts: [] };
+      const investOneAccounts = datasets.accounts.map((account) => account.value ?? account.invest1Id);
+
+      if (this.selectedDatasets?.accountGroups.length) {
+        const accounts = this.selectedDatasets?.accountGroups.map((group) => this.accountGroups[group.uuid]).flat();
+        accounts.forEach((source) => {
+          investOneAccounts.push(source.value);
+        });
+      }
+
+      if (this.predicates.length) {
+        const filterModel = this.buildPredicatesFilterModel(this.predicates);
+        nonVisibleColumns.push(...Object.keys(filterModel));
+        params.request.filterModel= {...params.request.filterModel, ...filterModel};
+      }
+
+      const payload: ProductsPayload = {
+        datasets,
+        investOneAccounts,
+        investOnePositioningColumns: this.processGroupsInPositioningColumns(this.selectedPositioningColumns).map((column) => column.value),
+        columns: [],
+        rowGroups: this.allowGrouping && !this.exportInProgress ? rowGroups : INITIAL_ROW_GROUPS,
+        bucketGrouping: this.allowGrouping && !this.exportInProgress ? bucketGrouping : undefined,
+        includeBenchmarkProducts: !this.heldOnlyProducts,
+        includeBenchmarkWeights: this.includeBenchmarkWeights || this.isDrillDown,
+        includePositions: this.includePositions || this.isDrillDown,
+        rowGroupAggs: rowGroupAggs.length ? rowGroupAggs : undefined,
+      };
+
+      const totalsRow = !this.exportInProgress && !params.request.groupKeys.length && first(payload.rowGroups) === INITIAL_ROW_GROUPS[0];
+
+      if (this.exportInProgress) {
+        params.request.groupKeys = [TOTALS];
+      }
+
+      if (this.isDrillDown && this.drillDownDefinition) {
+        const { filterModel, orFilterModel, sortModel } = this.drillDownDefinition;
+
+        if (sortModel) {
+          params.request.sortModel = sortModel;
+        }
+
+        const additionalColumns = [...Object.keys(filterModel || {}), ...Object.keys(orFilterModel || {})];
+        nonVisibleColumns.push(...additionalColumns);
+
+        payload.drillDownDefinition = { filterModel, orFilterModel };
+      }
+
+      // combine all columns needed
+      payload.columns = compact(uniq([...nonVisibleColumns, ...recurseColumnFields(this.gridOptions.api?.getColumnDefs())]));
+
+      if (totalsRow) {
+        params.success({
+          rowData: [
+            {
+              ...rowGroupAggs.reduce((columnState: Record<string, string>, rowGroupAgg) => {
+                if (!rowGroupAgg.aggFieldName) {
+                  return columnState;
+                }
+
+                columnState[rowGroupAgg.aggFieldName] = 'Loading...';
+
+                return columnState;
+              }, {}),
+              GSHLevel1: TOTALS,
+            },
+          ],
+          rowCount: 1,
+        });
+      }
+
+      // get data for request from server
+      this.positionsService
+        .fetchProducts(payload, params, this.view)
+        .pipe(
+          catchError((error: HttpErrorResponse) => {
+            this.totalRows = 0;
+            this.errorCode = error.status;
+            this.errorMessage = error.error.message;
+            this.gridOptions.api?.hideOverlay();
+            params.fail();
+
+            return NEVER;
+          }),
+          takeUntil(this.accountsChanged$),
+          finalize(() => {
+            if (this.paginationResponse.success) {
+              this.gridOptions.api?.hideOverlay();
+              this.errorCode = 0;
+
+              if (!this.isPlatformExposure || first(params.request.groupKeys) === TOTALS) {
+                this.totalRows = this.paginationResponse.maxResults;
+
+                if (this.totalRows === 0) {
+                  this.gridOptions.api?.showNoRowsOverlay();
+                }
+              }
+
+              if (this.isPlatformExposure && !params.request.groupKeys.length) {
+                this.paginationResponse.rowData = this.paginationResponse.rowData.map((rowData) => {
+                  // for platform exposure the overall MV% is not a useful number as there's no concept of the whole of AM's Market Value
+                  // so we strip it out from the TOTALS row as below
+                  rowData['marketValueWeight'] = undefined;
+                  rowData['netTradeDateMktValueBase'] = undefined;
+
+                  return rowData;
+                });
+              }
+
+              if (totalsRow) {
+                params.api.getRowNode(`${TOTALS}-0`)?.updateData(this.paginationResponse.rowData[0]);
+              } else {
+                params.success({
+                  rowData: this.paginationResponse.rowData,
+                  rowCount: this.paginationResponse.currentSize,
+                });
+              }
+            } else {
+              this.errorCode = 500;
+              this.gridOptions.api?.hideOverlay();
+              params.fail();
+            }
+          }),
+        )
+        .subscribe((response) => {
+          this.paginationResponse = response;
+        });
+    },
+  };
+  gridOptions: GridOptions = {
+    rowModelType: 'serverSide',
+    rowBuffer: 0,
+    cacheBlockSize: 250,
+    blockLoadDebounceMillis: 100,
+
+    defaultColDef: {
+      filter: 'agNumberColumnFilter',
+      filterParams: {
+        buttons: ['apply', 'clear'],
+        closeOnApply: true,
+        maxNumConditions: 10,
+        numAlwaysVisibleConditions: 3,
+      },
+      floatingFilter: true,
+      sortable: true,
+      resizable: true,
+      sortingOrder: ['desc', 'asc', null],
+      suppressMovable: true,
+      lockPinned: true,
+    },
+    components: {
+      gsNumberFloatingFilter: GSNumberFloatingFilter,
+    },
+    serverSideSortAllLevels: true,
+    serverSideFilterAllLevels: true,
+    suppressFieldDotNotation: true,
+    suppressDragLeaveHidesColumns: true,
+    getRowId: (params: GetRowIdParams<Record<string, string>, unknown>) => {
+      const parentKeysJoined: (string | undefined)[] = params.parentKeys || [];
+      const rowGroupCols = params.columnApi.getRowGroupColumns();
+
+      if (rowGroupCols[params.level]) {
+        const thisGroupCol = rowGroupCols[params.level].getColDef().field || '';
+        const bucketedField = this.findBucketedField(thisGroupCol);
+        parentKeysJoined.push(params.data[bucketedField ?? thisGroupCol]);
+      }
+
+      const leafLevel: string[] = this.idColumns.map((col) => params.data[col]);
+      parentKeysJoined.push(...leafLevel, params.level.toString());
+
+      return compact(parentKeysJoined).join('-');
+    },
+    onRowGroupOpened: (event) => {
+      if (!event.node.key) {
+        return;
+      }
+
+      const key = this.recurseParentLevels(event.node);
+      this.rowExpandedStates[key] = event.expanded;
+      const eventName = event.expanded ? AnalyticsEvents.EXPAND_GROUP : AnalyticsEvents.COLLAPSE_GROUP;
+
+      // if there is an actual event property we know this is user-driven and needs to be logged
+      // this stops us logging a call for every grid interaction due to us expanding GSHLevel1 by default
+      if (event.event) {
+        const { dashboardId, id, type } = this.view || {};
+        this.analytics.event(eventName, {
+          [AnalyticsProperties.ROW_GROUP]: key,
+          [AnalyticsProperties.DASHBOARD_ID]: dashboardId,
+          [AnalyticsProperties.DASHBOARD_TYPE]: type,
+          [AnalyticsProperties.VIEW_ID]: id,
+        });
+      }
+    },
+    isServerSideGroupOpenByDefault: (params) => {
+      if (!params.rowNode.key) {
+        return false;
+      }
+
+      const key = this.recurseParentLevels(params.rowNode);
+      const isExpanded = !this.exportInProgress && this.rowExpandedStates[key];
+      delete this.rowExpandedStates[key];
+
+      return isExpanded || params.rowNode.field === 'GSHLevel1';
+    },
+    onColumnMoved: () => {
+      this.gridOptions.api?.refreshHeader();
+    },
+    onDragStopped: (params) => {
+      console.log('params::', params);
+      this.viewsService.updateView(this.view, 'columnState', params.columnApi.getColumnState());
+    },
+    onSortChanged: (params) => {
+      if (!this.sortModelSetViaApi) {
+        const columnState = params.columnApi.getColumnState();
+        const sortedColumns = columnState.filter((col) => col.sort);
+
+        this.analytics.event(AnalyticsEvents.SORT_GRID, {
+          [AnalyticsProperties.SORTED_COLUMNS]: sortedColumns.map((col) => col.colId),
+          [AnalyticsProperties.SORT_ORDER]: sortedColumns.map((col) => col.sort),
+        });
+        this.viewsService.updateView(this.view, 'columnState', columnState);
+      }
+
+      this.sortModelSetViaApi = false;
+    },
+    onFilterChanged: (params) => {
+      if (!this.filterModelSetViaApi) {
+        const model = params.api.getFilterModel();
+        const modelKeys = Object.keys(model);
+        let id = 0;
+
+        const clearing = !modelKeys.length && this.filters.length > 0;
+        const newFilters = modelKeys
+          .map((field) => {
+            const filters: PredicateInQueryWithID[] = [];
+
+            if (model[field].conditions?.length) {
+              const conditions: PredicateInQueryWithID[] = model[field].conditions.map((condition: BucketGroupFilterModel) => {
+                if (!condition.type) {
+                  return undefined;
+                }
+
+                return {
+                  id: id++,
+                  leftOperand: field,
+                  rightOperand: condition.filter ?? '',
+                  operator: AgGridAllowedDimensionsOperatorsTranslation[condition.type],
+                };
+              });
+              filters.push(...compact(conditions));
+            } else {
+              id++;
+
+              filters.push({
+                id,
+                leftOperand: field,
+                rightOperand: model[field].filter ?? '',
+                operator: AgGridAllowedDimensionsOperatorsTranslation[model[field].type],
+              });
+            }
+
+            return filters;
+          })
+          .flat();
+
+        this.saveFiltersToView(this.filters, newFilters, { clearing, afterFloatingFilter: params.afterFloatingFilter });
+        this.filters = newFilters;
+
+        const predicatesAsObject = groupBy(this.filters, 'leftOperand') || {};
+        this.filterPredicates = Object.keys(predicatesAsObject).map((dimensionName) => {
+          return { dimensionName, predicates: predicatesAsObject[dimensionName] };
+        });
+
+        this.lastFilterModel = model;
+      }
+
+      this.filterModelSetViaApi = false;
+    },
+    suppressCsvExport: true,
+    suppressExcelExport: true,
+  };
+  selectedGroupByOptions: GroupByOption[] = [];
+  selectedMetric!: MetricsBucket | undefined;
+  selectedColumns: { categoryId: string; packetId: string; columns?: string[] }[] = [];
+  initiated = false;
+  isPlatformExposure = false;
+  zebraStriping: boolean | undefined;
+
+  private accountsChanged$: Subject<boolean> = new Subject();
+  private allowedDimensions: AllowedDimension[] = [];
+  private autoGroupColumnDef = {
+    flex: undefined,
+    pinned: true,
+    headerName: 'Grouping',
+    headerClass: `products-grid__group-column`,
+    menuTabs: [],
+    suppressAutoSize: true,
+    suppressSizeToFit: true,
+  };
+  private destroy$: Subject<boolean> = new Subject();
+  private filterModelSetViaApi = false;
+  private fitColumnsToSize: boolean | undefined;
+  private idColumns: string[] = [];
+  private includePositions = true;
+  private lastFilterModel!: Record<string, any>;
+  private negativesInRed: boolean | undefined;
+  private paginationResponse: { currentSize: number; maxResults: number; success: boolean; rowData: Record<string, unknown>[]; forbidden: object } = {
+    currentSize: 0,
+    maxResults: 0,
+    success: false,
+    rowData: [],
+    forbidden: {},
+  };
+  private partialColumns!: Column[];
+  private rowExpandedStates: Record<string, boolean> = {};
+  private sortModelSetViaApi = false;
+
+  constructor(
+    @Inject(LOCALE_ID) public defaultLocale: string,
+    private readonly actions$: Actions,
+    private analytics: GsAnalyticsService,
+    private esgMetricsService: ESGMetricsService,
+    private modalService: NgbModal,
+    private positionsService: PositionsService,
+    private readonly store$: Store,
+    private viewsService: ViewsService,
+  ) {}
+
+  ngOnInit(): void {
+    this.overrideClasses = overrideStyleSheet.mount(this, FIConstants.NULL);
+
+    this.store$.pipe(select(getGridSettingsInSession), takeUntil(this.destroy$)).subscribe((state) => {
+      if (this.zebraStriping !== state.zebraStriping) {
+        if (state.zebraStriping) {
+          if (this.initiated) {
+            this.dataGridApi.setRowStripeInterval(1);
+          } else {
+            this.defaultGridState = {
+              zebraStripes: {
+                stripeInterval: 1,
+              },
+            };
+          }
+        } else {
+          if (this.initiated) {
+            this.dataGridApi.setRowStripeInterval(0);
+          }
+        }
+      }
+
+      this.fitColumnsToSize = state.fitColumnsToSize;
+      this.zebraStriping = state.zebraStriping;
+      this.negativesInRed = state.negativesInRed;
+
+      if (this.initiated) {
+        this.updateColumnDefinitions(this.partialColumns);
+      }
+    });
+
+    if (!this.view) {
       return;
     }
 
-    switch ($event.code) {
-      case 'Enter':
-        $event?.stopPropagation();
-        if (dropdownButton) {
-          this.selectDropdown(gsh, currentSelected, dropdownButton);
-        }
-        break;
+    this.groupByTitle = this.view.type === DashboardType.ACCOUNT_LED;
 
-      case 'ArrowDown':
-        if (this.expandedNodes[currentSelected]) {
-          const cmpChildObj = this.childCmp.find((cmp) => cmp.expanded || false);
-          if (cmpChildObj) {
-            cmpChildObj?.focusFirstChild(currentSelected, this.onDropdown);
-            cmpChildObj.onDropdown = this.onDropdown;
+    this.isPlatformExposure = this.view.type === DashboardType.PLATFORM_EXPOSURE;
+    this.idColumns = this.isPlatformExposure ? ['ProductKey', 'invest1Id', 'accountShortName'] : ['ProductKey'];
+    const selector = this.isPlatformExposure ? getPlatformExposureInf : getProductsInf;
+
+    this.store$.pipe(select(selector), takeUntil(this.destroy$)).subscribe((gridConfiguration) => {
+      const { categories, metrics, rowGroups } = gridConfiguration;
+
+      // there may be available dimensions too if platform exposure
+      if (this.isPlatformExposure) {
+        this.allowedDimensions = gridConfiguration.allowedDimensions || [];
+      }
+
+      if (!categories.length) {
+        return;
+      }
+
+      let isDifferent = false;
+      this.allowGrouping = !!rowGroups?.length;
+
+      if (this.allowGrouping && !this.isDrillDown) {
+        isDifferent = isDifferent || this.groupByOptions.length !== rowGroups.length;
+        const i1Group = rowGroups.find((group) => group.value === 'invest1Id');
+        this.selectedGroupByOptions = compact(
+          this.view?.settings?.groupBy
+            ? this.view.settings.groupBy.map((value) => rowGroups.find((group) => group.value === value))
+            : this.isPlatformExposure
+            ? [i1Group]
+            : [],
+        );
+      }
+
+      this.groupByOptions = rowGroups;
+      this.columnCatalogue = categories;
+      this.selectedColumns = this.view?.settings?.columns || (this.isPlatformExposure ? platformExposureColumnPackets : defaultColumnPackets);
+
+      if (!this.isDrillDown) {
+        this.availableMetrics = this.generateAvailableMetrics
+          ? this.positionsService.generateAvailableMetrics(this.selectedColumns, categories, {
+              aggregationFieldOverride: AggregationFieldType.PLATFORM_EXPOSURE,
+            })
+          : metrics;
+        this.addPositioningColumnToPicker();
+      }
+
+      this.generatePartialColumns(categories);
+      this.updateColumnDefinitions(this.partialColumns, !this.isDrillDown ? keyBy(this.view?.settings?.columnState, 'colId') || {} : {});
+
+      if (this.initiated || isDifferent) {
+        this.retry();
+      }
+
+      this.initiated = true;
+    });
+  }
+
+  // eslint-disable-next-line complexity
+  ngOnChanges(changes: SimpleChanges): void {
+    // on view change a few things need resetting to the view config
+    if (changes.view && !this.isDrillDown) {
+      const prev: ViewState = changes.view.previousValue || {};
+      const curr: ViewState = changes.view.currentValue || {};
+      let isDifferent = false;
+
+      if (this.allowGrouping) {
+        isDifferent = isDifferent || prev.settings?.groupBy?.join(',') !== curr.settings?.groupBy?.join(',');
+
+        if (isDifferent) {
+          this.selectedGroupByOptions = compact(
+            curr.settings?.groupBy
+              ? curr.settings.groupBy.map((value) => this.groupByOptions.find((group) => group.value === value))
+              : this.isPlatformExposure
+              ? [this.groupByOptions.find((group) => group.value === 'invest1Id')]
+              : [],
+          );
+        }
+      }
+
+      if (this.allowColumnSelection) {
+        isDifferent = isDifferent || !isEqual(prev.settings?.columns, curr.settings?.columns);
+
+        if (isDifferent) {
+          this.selectedColumns =
+            curr.settings?.columns || (curr.type !== DashboardType.PLATFORM_EXPOSURE ? defaultColumnPackets : platformExposureColumnPackets);
+
+          if (this.generateAvailableMetrics) {
+            this.availableMetrics = this.positionsService.generateAvailableMetrics(this.selectedColumns, this.columnCatalogue, {
+              aggregationFieldOverride: AggregationFieldType.PLATFORM_EXPOSURE,
+            });
           }
-          break;
+
+          this.addPositioningColumnToPicker();
         }
+      }
 
-        //check if needed
-        // case where dropdowns and level indexes are out of sync
-        if (!this.childCmp.get(currentSelected) && currentSelected > this.dropdownElementRef.length) {
-          this.childCmp.get(currentSelected - this.dropdownElementRef.length)?.focusFirstChild(currentSelected, false);
-          break;
+      if (this.allowMetricsSelection) {
+        isDifferent = isDifferent || !isEqual(prev.settings?.metricsSettings, curr.settings?.metricsSettings);
+
+        if (isDifferent) {
+          const settings = curr.settings?.metricsSettings || {};
+          const selectedMetrics = ['sizingAndContribution', 'profitAndLoss'].reduce(
+            (_selectedMetrics: Record<string, { sources: (keyof typeof MetricsLabels)[]; fields: string[] }>, metricType) => {
+              const defaultSources = metricType === 'sizingAndContribution' ? ['act'] : [];
+              const defaultMetrics = metricType === 'sizingAndContribution' ? ['MV %'] : [];
+
+              _selectedMetrics[metricType] = {
+                sources: settings[metricType]?.sources || defaultSources,
+                fields: settings[metricType]?.fields?.map((metric: string) => (metric === 'mv' ? 'MV' : metric)) || defaultMetrics,
+              };
+
+              return _selectedMetrics;
+            },
+            {},
+          );
+
+          this.selectedMetrics = selectedMetrics;
+
+          this.includeBenchmarkWeights = !!intersection(curr.settings?.metricsSettings?.sizingAndContribution?.sources, ['bmk', 'net']).length;
+          this.includePositions =
+            !!curr.settings?.metricsSettings?.sizingAndContribution?.sources.includes('act') && this.selectedPositioningColumns?.length !== 0;
+          this.includePositions = !this.includeBenchmarkWeights && !this.includePositions ? true : this.includePositions;
         }
+      }
 
-        if (currentSelected + 1 > this.gshValues.length - 1) {
-          this.outOfBounds.emit({ direction: 'down', currentSelected: this.parentPosition, onDropdown: this.onDropdown });
-          break;
+      // check held only flag
+      isDifferent = isDifferent || prev.settings?.heldOnly !== curr.settings?.heldOnly;
+      isDifferent = isDifferent || prev.query?.riskDate !== curr.query?.riskDate;
+      isDifferent = isDifferent || prev.query?.asOfTime !== curr.query?.asOfTime;
+      this.heldOnlyProducts = curr.settings?.heldOnly !== undefined ? curr.settings?.heldOnly : this.heldOnlyProducts;
+
+      // if this is a product dash we need to re-run the columns
+      if (isDifferent || prev.id !== curr.id) {
+        this.generatePartialColumns(this.columnCatalogue);
+        this.updateColumnDefinitions(this.partialColumns, keyBy(curr.settings?.columnState, 'colId') || {});
+
+        if (this.initiated) {
+          this.accountsChanged$.next(true);
+          this.retry();
         }
+      }
+    }
 
-        //if on dropdown button get by dropdown ref
-        if (this.onDropdown) {
-          this.dropdownElementRef.get(currentSelected + 1)?.nativeElement.focus();
-        } else {
-          this.gshLevelElementRef.get(currentSelected + 1)?.nativeElement.focus();
-        }
+    if (!isEqual(changes.selectedDatasets?.previousValue, changes.selectedDatasets?.currentValue)) {
+      this.updateColumnDefinitions(this.partialColumns, keyBy(this.view?.settings?.columnState, 'colId') || {});
+      const previousAccount = { ...changes.selectedDatasets?.previousValue?.accounts[0] };
+      const currentAccount = { ...changes.selectedDatasets?.currentValue?.accounts[0] };
 
-        break;
-
-      case 'ArrowUp':
-        //check if on first dropdown
-        if (!this.dropdownElementRef.get(currentSelected - 1) && this.dropdownElementRef.length > 0) {
-          const tempOnDropdown = this.onDropdown;
-          this.onDropdown = true;
-          this.outOfBounds.emit({ direction: 'up', currentSelected: this.parentPosition, onDropdown: tempOnDropdown });
-          break;
-        }
-
-        if (currentSelected - 1 < 0) {
-          if (this.dropdownElementRef.length === 0) {
-            this.outOfBounds.emit({ direction: 'up', currentSelected: this.parentPosition, onDropdown: false });
+      // if dataset has changed and account is not 360 OR 360 dataset is more than just a short name change refresh the grid
+      if (
+        this.view?.type !== DashboardType.THREE_SIXTY ||
+        !isEqualWith(previousAccount, currentAccount, (prevAcc, currAcc) => {
+          if (prevAcc) {
+            return prevAcc.invest1Id === currAcc.invest1Id && prevAcc.asOfTime === currAcc.asOfTime;
           } else {
-            //don't need this? - covered in first logic at top
-            const tempOnDropdown = this.onDropdown;
-            this.onDropdown = true;
-            this.outOfBounds.emit({ direction: 'up', currentSelected: this.parentPosition, onDropdown: tempOnDropdown });
+            return false;
           }
-          break;
-        }
+        })
+      ) {
+        this.accountsChanged$.next(true);
+        this.retry();
+      }
+    }
 
-        if (this.onDropdown) {
-          this.dropdownElementRef.get(currentSelected - 1)?.nativeElement.focus();
-        } else {
-          this.gshLevelElementRef.get(currentSelected - 1)?.nativeElement.focus();
-        }
+    if (
+      this.view?.type !== DashboardType.THREE_SIXTY &&
+      changes.selectedPositioningColumns?.previousValue !== changes.selectedPositioningColumns?.currentValue
+    ) {
+      this.accountsChanged$.next(true);
+      this.updateColumnDefinitions(this.partialColumns, !this.isDrillDown ? keyBy(this.view?.settings?.columnState, 'colId') || {} : {});
+      this.retry();
+    }
 
-        break;
+    if (changes.predicates && !isEqual(changes.predicates.previousValue, changes.predicates.currentValue) && this.initiated) {
+      this.accountsChanged$.next(true);
+      this.retry();
+    }
 
-      case 'ArrowLeft':
-        if (this.dropdownElementRef.length !== this.gshLevelElementRef.length) {
-          if (this.dropdownElementRef.length === 0) {
-            break;
-          }
-          this.dropdownElementRef.get(currentSelected - this.dropdownElementRef.length)?.nativeElement.focus();
-        }
-        this.dropdownElementRef.get(currentSelected)?.nativeElement.focus();
-        this.onDropdown = true;
+    if (this.isDrillDown) {
+      if (changes.selectedMetrics) {
+        this.selectedMetric = find(this.availableMetrics, { id: first(keys(changes.selectedMetrics.currentValue)) });
+      }
 
-        break;
+      if (changes.availableMetrics) {
+        this.selectedMetric = find(changes.availableMetrics.currentValue, { id: first(keys(this.selectedMetrics)) });
+      }
 
-      case 'ArrowRight':
-        this.gshLevelElementRef.get(currentSelected)?.nativeElement.focus();
-        this.onDropdown = false;
+      if (changes.selectedMetrics || changes.availableMetrics || changes.drillDownDefinition) {
+        this.updateColumnDefinitions(this.partialColumns);
+      }
 
-        break;
-
-      default:
-        break;
+      if ((changes.drillDownDefinition || changes.view?.previousValue?.query?.riskDate !== changes.view?.currentValue?.query?.riskDate) && this.initiated) {
+        this.accountsChanged$.next(true);
+        this.retry();
+      }
     }
   }
-}
 
+  ngOnDestroy(): void {
+    overrideStyleSheet.unmount(this);
+    this.accountsChanged$.next(true);
+    this.destroy$.next(true);
 
+    this.accountsChanged$.complete();
+    this.destroy$.complete();
+  }
 
+  retry(): void {
+    this.gridOptions.api?.refreshServerSide({ purge: true });
+  }
 
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { CUSTOM_ELEMENTS_SCHEMA, SimpleChange } from '@angular/core';
+  blur($event: MenuBlurEvent | FocusEvent, dropdownButtonRef: ButtonComponent): void {
+    this.columnMenuVisible = shouldBlurElementBeVisible(this.columnMenuVisible, $event, dropdownButtonRef);
+  }
 
-import { ESGMetricsService } from '../esg-dashboard/esg-metrics.service';
-import { GSH, GshSelectorComponent } from './gsh-selector.component';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { of } from 'rxjs';
-import { selectorData } from './gsh-selector-data';
+  drillDownMetricChanged($event: MetricsBucket): void {
+    this.selectedMetrics = {
+      [$event.id]: {
+        sources: $event.sources.map((source) => source.fieldName),
+        fields: $event.fields.map((field) => field.displayName.toLowerCase()),
+      },
+    };
+    this.selectedMetric = $event;
 
-describe('GshSelectorComponent', () => {
-  let component: GshSelectorComponent;
-  let fixture: ComponentFixture<GshSelectorComponent>;
+    this.includeBenchmarkWeights = true;
+    this.includePositions = true;
+    this.updateColumnDefinitions(this.partialColumns);
+    this.retry();
+  }
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [GshSelectorComponent, HttpClientTestingModule],
-      providers: [
+  columnsChanged($event: { categoryId: string; packetId: string; columns?: string[] }[], modal: NgbModalRef): void {
+    if (isEqual(this.selectedColumns, $event) || !this.view) {
+      modal.close();
+
+      return;
+    }
+
+    this.selectedColumns = $event;
+
+    if (!this.isDrillDown) {
+      this.viewsService.updateView(this.view, 'columns', $event);
+    } else {
+      this.generatePartialColumns(this.columnCatalogue);
+      this.updateColumnDefinitions(this.partialColumns, keyBy(this.view?.settings?.columnState, 'colId') || {});
+      this.retry();
+    }
+
+    modal.dismiss();
+  }
+
+  filtersChanged(predicates: PredicateInQueryWithID[]): void {
+    const clearing = this.filters.length > 0 && !predicates.length;
+    this.saveFiltersToView(this.filters, predicates, { clearing });
+    this.filters = predicates;
+    this.setFilterModel(this.filters);
+  }
+
+  logAccountColumnsAnalytics(): void {
+    const { dashboardId, id, type } = this.view || {};
+    this.analytics.event(AnalyticsEvents.OPEN_ACCOUNT_METRICS_COLUMNS_MENU, {
+      [AnalyticsProperties.DASHBOARD_ID]: dashboardId,
+      [AnalyticsProperties.DASHBOARD_TYPE]: type,
+      [AnalyticsProperties.VIEW_ID]: id,
+    });
+  }
+
+  logGroupByAnalytics(): void {
+    const { dashboardId, id, type } = this.view || {};
+    this.analytics.event(AnalyticsEvents.OPEN_GROUPING_MENU, {
+      [AnalyticsProperties.DASHBOARD_ID]: dashboardId,
+      [AnalyticsProperties.DASHBOARD_TYPE]: type,
+      [AnalyticsProperties.VIEW_ID]: id,
+    });
+  }
+
+  metricsChanged($event: Record<string, { sources: (keyof typeof MetricsLabels)[]; fields: (keyof typeof MetricsLabels)[] }>): void {
+    if (isEqual(this.selectedMetrics, $event) || !this.view) {
+      return;
+    }
+
+    this.selectedMetrics = $event;
+
+    if (!this.isDrillDown) {
+      this.viewsService.updateView(this.view, 'metricsSettings', $event);
+    } else {
+      this.includeBenchmarkWeights = !!intersection($event.sizingAndContribution.sources, ['bmk', 'net']).length;
+      this.includePositions = $event.sizingAndContribution.sources.includes('act');
+      this.updateColumnDefinitions(this.partialColumns, keyBy(this.view?.settings?.columnState, 'colId') || {});
+      this.retry();
+    }
+  }
+
+  toggleColumnDropdown(): void {
+    this.columnMenuVisible = !this.columnMenuVisible;
+
+    if (this.columnMenuVisible) {
+      const { dashboardId, id, type } = this.view || {};
+      this.analytics.event(AnalyticsEvents.OPEN_COLUMN_MENU, {
+        [AnalyticsProperties.DASHBOARD_ID]: dashboardId,
+        [AnalyticsProperties.DASHBOARD_TYPE]: type,
+        [AnalyticsProperties.VIEW_ID]: id,
+      });
+    }
+  }
+
+  updateHeldProductsSetting(): void {
+    if (!this.view) {
+      return;
+    }
+
+    if (!this.isDrillDown) {
+      this.viewsService.updateView(this.view, 'heldOnly', this.heldOnlyProducts);
+    }
+
+    this.analytics.event(AnalyticsEvents.TOGGLE_HELD_ONLY, {
+      [AnalyticsProperties.TOGGLE_STATE]: this.filterBarActive ? AnalyticsToggleState.ON : AnalyticsToggleState.OFF,
+    });
+    this.retry();
+  }
+
+  registryAndStoreCall(registryAndStore: RegistryAndStoreContextArgs): void {
+    this.registryAndStore = registryAndStore;
+  }
+
+  instanceCallBackCall(dataGridApi: DataGridApi): void {
+    this.dataGridApi = dataGridApi;
+  }
+
+  selectedGroupByOptionsChanged($event: GroupByOption[]): void {
+    if (!this.view) {
+      return;
+    }
+
+    const groupByValues = map($event, 'value');
+    const orderOfOldValues = join(groupByValues, ',');
+    const orderOfNewValues = join(map(this.selectedGroupByOptions, 'value'), ',');
+
+    if (orderOfOldValues === orderOfNewValues) {
+      return;
+    }
+
+    if (!this.isDrillDown) {
+      this.viewsService.updateView(this.view, 'groupBy', groupByValues);
+    }
+
+    this.selectedGroupByOptions = $event;
+    this.generatePartialColumns(this.columnCatalogue);
+    this.updateColumnDefinitions(this.partialColumns, !this.isDrillDown ? keyBy(this.view?.settings?.columnState, 'colId') || {} : {});
+    this.retry();
+  }
+
+  setFilterModel(filters: PredicateInQueryWithID[]): void {
+    const groupedFilterModel = groupBy(
+      filters.map((predicate) => {
+        const dimensionConfig = this.filterOptions.find(({ dimension }) => dimension.field === predicate.leftOperand);
+
+        return {
+          filterType: dimensionConfig?.dimension.type,
+          filter: predicate.rightOperand ?? '',
+          type: AllowedDimensionsOperatorsAgGridTranslation[predicate.operator as AllowedDimensionsOperators],
+          field: predicate.leftOperand,
+        };
+      }),
+      'field',
+    );
+    const filterModel = Object.keys(groupedFilterModel).reduce((model: Record<string, any>, field: string) => {
+      if (groupedFilterModel[field].length === 1) {
+        model[field] = groupedFilterModel[field][0];
+
+        return model;
+      }
+
+      // ag-grid supports 2 atm
+      const firstCondition = groupedFilterModel[field][0];
+      const filter =
+        firstCondition.filterType !== AllowedDimensionTypes.DATE
+          ? {
+              conditions: groupedFilterModel[field],
+              filterType: firstCondition.filterType,
+              operator: 'OR',
+            }
+          : {
+              filterType: firstCondition.filterType,
+              type: firstCondition.type,
+              dateFrom: firstCondition.filter,
+            };
+
+      model[field] = filter;
+
+      return model;
+    }, {});
+
+    this.filterModelSetViaApi = true;
+    this.gridOptions.api?.setFilterModel(filterModel);
+    this.gridOptions.api?.onFilterChanged();
+  }
+
+  toggleFilterBar(): void {
+    this.filterBarActive = !this.filterBarActive;
+    this.analytics.event(AnalyticsEvents.TOGGLE_FILTER_BAR, {
+      [AnalyticsProperties.TOGGLE_STATE]: this.filterBarActive ? AnalyticsToggleState.ON : AnalyticsToggleState.OFF,
+    });
+
+    if (this.filterBarActive) {
+      setTimeout(() =>
+        this.filterBar.nativeElement.getElementsByClassName('gs-queryfield__dimension-predicate-collection-container')[0].dispatchEvent(new Event('click')),
+      );
+    }
+  }
+
+  export(): void {
+    if (!this.gridOptions.api || !this.view) {
+      return;
+    }
+
+    const analyticsStartTimestamp = DateTime.now().valueOf();
+    const columns: string[] = [...this.idColumns];
+    const params: IServerSideGetRowsParams = {
+      request: {
+        filterModel: undefined,
+      } as IServerSideGetRowsParams['request'],
+    } as IServerSideGetRowsParams;
+
+    const datasets: DashboardDatasets = this.selectedDatasets || { accounts: [], accountGroups: [], benchmarks: [], analysts: [] };
+    const investOneAccounts = datasets.accounts.map((account) => account.value ?? account.invest1Id);
+
+    if (this.selectedDatasets?.accountGroups.length) {
+      const accounts = this.selectedDatasets?.accountGroups.map((group) => this.accountGroups[group.uuid]).flat();
+      accounts.forEach((source) => {
+        investOneAccounts.push(source.value);
+      });
+    }
+
+    const formattedDate = this.view.query?.riskDate ?? this.esgMetricsService.defaultDate().toFormat('yyyy-MM-dd');
+    const exportParams = {
+      columnGroups: true,
+      onlySelected: false,
+      onlySelectedAllPages: false,
+      author: 'AM Fixed Income Portfolio Metrics',
+      fileName: `${this.view.name.replace(/\./g, '')} - ${formattedDate}`,
+    };
+
+    if (this.predicates?.length) {
+      const filterModel = this.buildPredicatesFilterModel(this.predicates);
+      columns.push(...Object.keys(filterModel));
+      params.request.filterModel = filterModel;
+    }
+
+    const payload: ProductsPayload = {
+      datasets,
+      investOneAccounts,
+      investOnePositioningColumns: this.processGroupsInPositioningColumns(this.selectedPositioningColumns).map((column) => column.value),
+      columns,
+      rowGroups: [],
+      bucketGrouping: undefined,
+      includeBenchmarkProducts: !this.heldOnlyProducts,
+    };
+
+    const gridApi = this.gridOptions.api;
+    this.processedExportRows = 0;
+    this.exportInProgress = true;
+    this.positionsService
+      .getTotalRowCountForAccounts(payload, params, this.view)
+      .pipe(takeUntil(this.accountsChanged$))
+      .subscribe((rowCount) => {
+        // hold onto old group state
+        const oldColumnState = this.gridOptions.columnApi?.getColumnState();
+        this.gridOptions.columnApi?.applyColumnState({ state: map(oldColumnState, (state) => ({ ...state, rowGroup: false })) });
+        this.updateColumnDefinitions(this.partialColumns);
+
+        const existingCacheBlockSize = this.gridOptions.cacheBlockSize;
+        this.gridOptions.cacheBlockSize = rowCount;
+
+        const onModelUpdated = (modelParams: ModelUpdatedEvent) => {
+          const firstRow = modelParams.api.getModel().getRow(0);
+
+          if (firstRow?.data) {
+            this.gridOptions.suppressExcelExport = false;
+            gridApi.removeEventListener(Events.EVENT_MODEL_UPDATED, onModelUpdated);
+
+            // export
+            gridApi.exportDataAsExcel(exportParams);
+            gridApi.ensureIndexVisible(0, 'top');
+
+            this.gridOptions.suppressExcelExport = true;
+
+            const responseTime = DateTime.now().valueOf() - analyticsStartTimestamp;
+            const { dashboardId, id, type } = this.view || {};
+
+            // analytics
+            this.analytics.event(AnalyticsEvents.EXPORT_TO_EXCEL, {
+              [AnalyticsProperties.NUM_OF_ACCOUNTS]: investOneAccounts.length,
+              [AnalyticsProperties.NUM_OF_ACCOUNT_GROUPS]: datasets.accountGroups?.length || 0,
+              [AnalyticsProperties.NUM_OF_ANALYSTS]: datasets.analysts?.length || 0,
+              [AnalyticsProperties.NUM_OF_BENCHMARKS]: datasets.benchmarks?.length || 0,
+              [AnalyticsProperties.RESPONSE_STATUS]: GsAnalyticsActions.SUCCESS,
+              [GsAnalyticsProperties.REQUEST_DURATION]: responseTime,
+              [GsAnalyticsProperties.REQUEST_DURATION_FRIENDLY]: Duration.fromMillis(responseTime).as('seconds'),
+              [AnalyticsProperties.SERVER_REQUEST]: true,
+              [AnalyticsProperties.TOTAL_ROWS]: rowCount,
+              [AnalyticsProperties.DASHBOARD_ID]: dashboardId,
+              [AnalyticsProperties.DASHBOARD_TYPE]: type,
+              [AnalyticsProperties.VIEW_ID]: id,
+            });
+
+            this.exportInProgress = false;
+            this.updateColumnDefinitions(this.partialColumns, keyBy(oldColumnState, 'colId'));
+
+            this.gridOptions.cacheBlockSize = existingCacheBlockSize;
+            this.gridOptions.maxBlocksInCache = 2;
+            (gridApi.getModel() as unknown as { resetRootStore: () => void }).resetRootStore();
+          }
+        };
+
+        gridApi.addEventListener(Events.EVENT_MODEL_UPDATED, onModelUpdated);
+        (gridApi.getModel() as unknown as { resetRootStore: () => void }).resetRootStore();
+      });
+  }
+
+  openColumnSelectionModal(template: TemplateRef<HTMLElement>): void {
+    this.columnMenuVisible = false;
+    this.modalService.open(template, {
+      modalDialogClass: 'column-picker-modal',
+    });
+
+    const { id, dashboardId } = this.view || {};
+    this.analytics.event(AnalyticsEvents.OPEN_PRODUCT_COLUMNS_PICKER, { [AnalyticsProperties.DASHBOARD_ID]: dashboardId, [AnalyticsProperties.VIEW_ID]: id });
+  }
+
+  private updateColumnDefinitions(partialColumns: Column[], existingColumnState: Record<string, ColumnState> | undefined = {}): void {
+    let columnStates: Record<string, ColumnState> = existingColumnState;
+    let runStateUpdate = false;
+    const partialColumnsGrouped = groupBy(partialColumns, 'packetName');
+    const uniqAccounts = uniqBy(this.processGroupsInPositioningColumns(this.selectedPositioningColumns), 'value');
+
+    this.filterOptions = [];
+
+    const fullColumnSet = compact(
+      flatten(
+        map(partialColumnsGrouped, (columns, key): ColGroupDef | undefined => {
+          return {
+            headerName: key,
+            headerClass: stripingColumnHeader,
+            marryChildren: true,
+            children: map(columns, (column) => {
+              const newColumn = clone(column) as ColDef & Column;
+              const field = newColumn.field;
+
+              if (!field) {
+                return newColumn;
+              }
+
+              if (field === 'LongDescription') {
+                newColumn.initialWidth = 400;
+              } else {
+                newColumn.initialWidth = 150;
+              }
+
+              // account column on P.E view
+              if (this.view?.type === DashboardType.PLATFORM_EXPOSURE) {
+                if (field === 'invest1Id') {
+                  newColumn.valueFormatter = (params: ValueFormatterParams) => {
+                    if (params.node?.level === 0) {
+                      return '';
+                    }
+
+                    return params.data['accountShortName'] ? `${params.data['accountShortName']} [${params.value}]` : ` - [${params.value}]`;
+                  };
+                }
+              }
+
+              columnStates[field] = existingColumnState[field]
+                ? { ...existingColumnState[field], hide: column.columnProperties.hide || null, rowGroup: false, rowGroupIndex: null }
+                : { colId: field, width: newColumn.width, sort: null, rowGroup: false, rowGroupIndex: null, hide: column.columnProperties.hide || null };
+
+              const precision = { minPrecision: newColumn.columnProperties.minPrecision, maxPrecision: newColumn.columnProperties.maxPrecision };
+
+              switch (newColumn.columnProperties.type) {
+                case 'text':
+                  newColumn.filter = 'agTextColumnFilter';
+                  newColumn.type = undefined;
+                  break;
+
+                case 'number':
+                  newColumn.type = 'numericColumn';
+                  newColumn.floatingFilterComponent = 'gsNumberFloatingFilter';
+
+                  if (newColumn.columnProperties.formatDecimals) {
+                    newColumn.valueFormatter = formatDecimals(false, precision, this.defaultLocale, this.isDrillDown);
+                  }
+                  break;
+
+                case 'numberWithPrefix':
+                  newColumn.type = 'numericColumn';
+
+                  if (newColumn.columnProperties.formatDecimals) {
+                    newColumn.valueFormatter = formatDecimals(true, precision, this.defaultLocale, this.isDrillDown);
+                  }
+                  break;
+
+                case 'date':
+                  newColumn.filter = 'agDateColumnFilter';
+                  newColumn.valueGetter = (params: ValueGetterParams) => {
+                    let dateString: string | undefined = get(params.data, field, '');
+
+                    if (dateString && dateString.startsWith('**')) {
+                      dateString = undefined;
+                    }
+
+                    return dateString ? DateTime.fromFormat(dateString, 'yyyyMMdd').toFormat('yyyy-MM-dd') : '';
+                  };
+                  delete newColumn.type;
+                  break;
+
+                default:
+                  break;
+              }
+
+              newColumn.hide = newColumn.columnProperties.hide;
+              newColumn.columnProperties = {};
+              // newColumn.floatingFilter = !this.isPlatformExposure;
+
+              // is this a grouped column?
+              const groupedColumns = ['GSHLevel1'].concat(map(this.selectedGroupByOptions, 'value'));
+
+              if (groupedColumns.includes(field) && !this.exportInProgress) {
+                columnStates[field].rowGroup = true;
+                columnStates[field].rowGroupIndex = groupedColumns.indexOf(field);
+
+                // is there a bucket group for this?
+                const bucketedField = this.findBucketedField(field);
+                if (bucketedField) {
+                  newColumn.valueGetter = (params: ValueGetterParams) => {
+                    return get(params.data, params.node?.group ? bucketedField : field) as string;
+                  };
+                  const originalFormatter = newColumn.valueFormatter as ValueFormatterFunc;
+                  newColumn.valueFormatter = (params: ValueFormatterParams) => {
+                    return (params.node?.group || !originalFormatter ? params.value : originalFormatter(params)) as string;
+                  };
+                }
+              }
+
+              if (newColumn.pinned) {
+                newColumn.suppressSizeToFit = true;
+                newColumn.pinned = true;
+              }
+
+              if (this.allowFilterBar) {
+                this.addToFilterBar(newColumn);
+              }
+
+              const cellClass = newColumn.type === 'numericColumn' ? formatNegatives(this.negativesInRed) : undefined;
+
+              // is this included with selected metrics?
+              if (this.allowMetricsSelection && uniqAccounts.length && !this.isDrillDown) {
+                (newColumn as unknown as ColGroupDef).children = [
+                  {
+                    field: newColumn.field,
+                    cellClass,
+                    headerName: '',
+                    pinned: newColumn.pinned,
+                    suppressSizeToFit: newColumn.suppressSizeToFit,
+                    cellRenderer: newColumn.cellRenderer,
+                    filter: newColumn.filter,
+                    floatingFilterComponent: newColumn.floatingFilterComponent,
+                    type: newColumn.type,
+                    width: newColumn.columnProperties.width,
+                    sortable: newColumn.columnProperties.sortable,
+                    showRowGroup: newColumn.showRowGroup,
+                    valueFormatter: newColumn.valueFormatter,
+                    valueGetter: newColumn.valueGetter,
+                    hide: newColumn.columnProperties.hide,
+                    suppressMovable: true,
+                  },
+                ];
+
+                delete newColumn.field;
+              }
+
+              return newColumn as ColDef;
+            }),
+          };
+        }),
+      ),
+    );
+
+    // are we adding in account columns?
+    if (this.allowMetricsSelection && uniqAccounts.length) {
+      const additionalFilterOptions: ProductsGridComponent['filterOptions'] = [];
+      const additionalColumns = flatten(
+        map(uniqAccounts, (account) => {
+          const accountHeaderName =
+            this.view?.type === DashboardType.THREE_SIXTY && account.value ? this.view.name : `${account.shortName ?? ''} [${account.value}]`;
+          const { columns, columnState, requiresStateUpdate, filterOptions } = this.generateAccountColumns(account, columnStates);
+
+          columnStates = columnState;
+          runStateUpdate = requiresStateUpdate;
+
+          additionalFilterOptions.push(
+            ...filterOptions.map((option) => ({
+              ...option,
+              column: {
+                ...option.column,
+                headerName: `${accountHeaderName} ${option.column.headerName}`,
+              },
+            })),
+          );
+
+          return {
+            headerName: accountHeaderName,
+            headerClass: stripingColumnHeader,
+            marryChildren: true,
+            children: columns,
+          };
+        }),
+      );
+
+      if (this.isDrillDown) {
+        const drillDownColumns = flatten(map(additionalColumns, 'children'));
+        fullColumnSet.push(...drillDownColumns);
+      } else {
+        const positioningIdx = findIndex(this.selectedColumns, positioningColumnSet);
+        fullColumnSet.unshift(...additionalColumns);
+        additionalColumns.forEach(() => {
+          moveItemInArray(fullColumnSet, 0, positioningIdx + additionalColumns.length - 1);
+        });
+
+        this.filterOptions.push(...additionalFilterOptions);
+      }
+    }
+
+    const autoGroupColumnState = find(columnStates, { colId: 'ag-Grid-AutoColumn' });
+    const autoGroupWidth = autoGroupColumnState?.width || 150;
+    const amountOfUnderscores = Math.ceil(autoGroupWidth / 5.75);
+    this.autoGroupColumnDef.headerName = '_'.repeat(amountOfUnderscores);
+
+    this.filters = this.view?.settings?.filters || [];
+    const predicatesAsObject = groupBy(this.filters, 'leftOperand') || {};
+    this.filterPredicates = Object.keys(predicatesAsObject).map((dimensionName) => {
+      return { dimensionName, predicates: predicatesAsObject[dimensionName] };
+    });
+    this.sortModelSetViaApi = true;
+
+    if (this.gridOptions.api) {
+      this.gridOptions.api.setColumnDefs(fullColumnSet);
+      this.gridOptions.columnApi?.applyColumnState({ state: Object.values(columnStates) });
+      this.gridOptions.api.setAutoGroupColumnDef(this.autoGroupColumnDef);
+      this.setFilterModel(this.filters);
+
+      // if in a drill down, resize to fit
+      if (this.isDrillDown) {
+        this.gridOptions.api.sizeColumnsToFit();
+      }
+    } else {
+      this.gridOptions.autoGroupColumnDef = this.autoGroupColumnDef;
+      this.gridOptions.columnDefs = fullColumnSet;
+
+      setTimeout(() => {
+        this.gridOptions.columnApi?.applyColumnState({ state: Object.values(columnStates) });
+        this.setFilterModel(this.filters);
+
+        if (this.isDrillDown) {
+          this.gridOptions.api?.sizeColumnsToFit();
+        }
+      });
+    }
+
+    // if we require a state update on metrics columns, run it now
+    if (runStateUpdate && !this.isDrillDown) {
+      this.viewsService.updateView(this.view, 'columnState', Object.values(columnStates));
+    }
+  }
+
+  private addToFilterBar(column: ColDef & Column): void {
+    if (!column.field || column.field === 'GSHLevel1') {
+      return;
+    }
+
+    const dimension: AllowedDimension = {
+      field: column.field,
+      type: column.type === 'numericColumn' ? AllowedDimensionTypes.NUMBER : AllowedDimensionTypes.TEXT,
+      autocomplete: false,
+    };
+
+    this.filterOptions.push({
+      column: column,
+      dimension,
+    });
+  }
+
+  private generateAccountColumns(
+    account: { value: string; shortName: string },
+    columnState: Record<string, ColumnState>,
+  ): { columns: ColGroupDef[]; columnState: Record<string, ColumnState>; requiresStateUpdate: boolean; filterOptions: ProductsGridComponent['filterOptions'] } {
+    const columns: ColGroupDef[] = [];
+    const filterOptions: ProductsGridComponent['filterOptions'] = [];
+    let requiresStateUpdate = false;
+
+    Object.keys(this.selectedMetrics).forEach((selectedMetric) => {
+      this.selectedMetrics[selectedMetric].fields.forEach((field) => {
+        const metricBucket = this.availableMetrics.find((bucket) => bucket.id === selectedMetric);
+        const metricField =
+          metricBucket?.fields.find((metric) => metric.displayName.toLowerCase() === field.toLowerCase()) ||
+          ({ supportedSources: [], aggFieldName: '' } as unknown as RowGroupAggField);
+        const mainHeaderName = selectedMetric === 'profitAndLoss' ? MetricsPnLLabels[field] : field;
+        let intersectionOfSources = this.selectedMetrics[selectedMetric].sources; // Object.keys(MetricsLabels);
+
+        if (metricField.supportedSources) {
+          intersectionOfSources = metricField.supportedSources as Array<keyof typeof MetricsLabels>;
+        }
+
+        columns.push({
+          headerName: mainHeaderName,
+          headerClass: 'justify-content-center text-uppercase',
+          children: map(intersectionOfSources, (source): ColDef => {
+            const sourceField = metricField.aggFieldName.replace('{account}', account.value).replace('{source}', source);
+            const width = this.isDrillDown ? 75 : 125;
+
+            const hide = !this.selectedMetrics[selectedMetric].sources.includes(source);
+
+            if (hide) {
+              // do we need to update this state?
+              if (!columnState[sourceField]?.hide) {
+                requiresStateUpdate = true;
+              }
+
+              columnState[sourceField] = { colId: sourceField, hide: true };
+            } else {
+              // do we need to update this state?
+              if (columnState[sourceField]?.hide) {
+                requiresStateUpdate = true;
+              }
+
+              columnState[sourceField] = { ...(columnState[sourceField] || {}), hide: false };
+            }
+
+            const precision = { minPrecision: metricField.minPrecision, maxPrecision: metricField.maxPrecision };
+            const headerName = MetricsLabels[source];
+
+            if (this.allowFilterBar && !hide) {
+              const dimension: AllowedDimension = {
+                field: sourceField,
+                type: AllowedDimensionTypes.NUMBER,
+                autocomplete: false,
+              };
+
+              filterOptions.push({
+                column: {
+                  columnProperties: {},
+                  headerName: `${mainHeaderName} ${headerName}`,
+                },
+                dimension,
+              });
+            }
+
+            return {
+              field: sourceField,
+              headerName,
+              cellClass: formatNegatives(this.negativesInRed),
+              cellRenderer: (params: ICellRendererParams) => {
+                const forbidden = this.paginationResponse.forbidden;
+                const columnId = params.colDef?.colId ? params.colDef?.colId.split('_')[0] : '';
+                const formattedValue = formatDecimals(
+                  source === MetricsLabels.net.toLowerCase(),
+                  precision,
+                  this.defaultLocale,
+                  this.isDrillDown,
+                )({ value: params.value } as ValueFormatterParams);
+
+                if (columnId && forbidden) {
+                  const exists = some(forbidden, (arr: Array<string>) => arr.includes(columnId));
+
+                  return exists ? '<div class="permission-denied">Permission Denied</div>' : formattedValue;
+                } else {
+                  return formattedValue;
+                }
+              },
+              type: 'numericColumn',
+              initialWidth: width,
+              minWidth: width,
+              hide,
+              suppressMovable: true,
+            };
+          }),
+          marryChildren: true,
+        });
+      });
+    });
+
+    return { columns, columnState, requiresStateUpdate, filterOptions };
+  }
+
+  private generatePartialColumns(gridColumns: ColumnCategories[] | PartialServerColDef[]): void {
+    if (this.isDrillDown) {
+      this.partialColumns = [
         {
-          provide: ESGMetricsService,
-          useValue: {
-            gshSelector: () => of(selectorData),
+          packetName: 'Product Identifiers',
+          pinned: false,
+          field: 'LongDescription',
+          headerName: 'Description',
+          columnProperties: {
+            width: 75,
           },
         },
-      ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
-    }).compileComponents();
-  });
+      ];
+    } else {
+      this.partialColumns = compact(
+        flatten(
+          this.selectedColumns.map((selectedColumn) => {
+            if (selectedColumn.categoryId === positioningColumnSet.categoryId && selectedColumn.packetId === positioningColumnSet.packetId) {
+              return undefined;
+            }
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(GshSelectorComponent);
-    component = fixture.componentInstance;
-    // fixture.detectChanges();
-  });
+            const packet = this.esgMetricsService.requestFromCatalogue<ColumnPacket>(gridColumns as ColumnCategories[], [
+              selectedColumn.categoryId,
+              selectedColumn.packetId,
+            ]);
 
-  it('set gsh values on load', () => {
-    fixture.detectChanges();
-    expect(component.gshLevelLabel).toEqual('L3');
-    expect(component.onDropdown).toEqual(true);
-  });
+            if (!selectedColumn.columns) {
+              return packet?.columns.map((col) => ({ ...col, packetName: packet.packetName, pinned: packet.pinned })) || [];
+            }
 
-  it('should always focus on first child after view init', () => {
-    fixture.detectChanges();
-    jest.spyOn(component, 'focusFirstChild');
+            return compact(
+              selectedColumn.columns.map((col) => {
+                const definition = getColumnByIdentifier(packet, col);
 
-    component.ngAfterViewInit();
+                if (!definition) {
+                  return undefined;
+                }
 
-    expect(component.focusFirstChild).toBeCalledTimes(1);
-  });
+                return { ...definition, packetName: packet?.packetName, pinned: packet?.pinned };
+              }),
+            );
+          }),
+        ),
+      );
+    }
 
-  it('should focus on first child on changes if there is a child', () => {
-    fixture.detectChanges();
-    jest.spyOn(component, 'focusFirstChild');
+    // add in any row groups
+    [...['GSHLevel1'].map((value) => ({ label: value, value })), ...this.selectedGroupByOptions].forEach((groupByOption) => {
+      if (find(this.partialColumns, { field: groupByOption.value })) {
+        return;
+      }
 
-    component.expanded = true;
-    component.ngOnChanges({ expanded: new SimpleChange(false, true, false) });
+      this.partialColumns.push({
+        headerName: groupByOption.label,
+        field: groupByOption.value,
+        packetName: 'Hidden',
+        columnProperties: {
+          hide: true,
+        },
+      });
+    });
+  }
 
-    expect(component.focusFirstChild).toBeCalledTimes(1);
-  });
+  private findBucketedField(field: string): string | undefined {
+    const bucket = find(this.groupByOptions, { value: field });
 
-  it('should not focus on first child on changes if there is not a child', () => {
-    fixture.detectChanges();
-    jest.spyOn(component, 'focusFirstChild');
+    return bucket?.bucketGrouping?.bucketedField;
+  }
 
-    component.expanded = true;
-    component.ngOnChanges({ expanded: new SimpleChange(false, false, false) });
+  private addPositioningColumnToPicker(): void {
+    const positioning = find(this.selectedColumns, positioningColumnSet);
 
-    expect(component.focusFirstChild).toBeCalledTimes(0);
-  });
+    if (!positioning) {
+      this.selectedColumns = [positioningColumnSet, ...this.selectedColumns];
+      moveItemInArray(this.selectedColumns, 0, 1);
+    }
 
-  it('should focus on first dropdown child', () => {
-    fixture.detectChanges();
-    jest.spyOn(component.dropdownElementRef.first.nativeElement, 'focus');
-    component.focusFirstChild(0, true);
+    this.selectedColumns = this.selectedColumns.map((column) => {
+      if (column.categoryId === positioningColumnSet.categoryId) {
+        const columns = this.processGroupsInPositioningColumns(this.selectedPositioningColumns).map((account) => account.value);
 
-    expect(component.dropdownElementRef.get(0)?.nativeElement.focus).toBeCalledTimes(1);
-  });
+        return {
+          ...column,
+          columns,
+        };
+      }
 
-  it('should focus on first gsh level child', () => {
-    fixture.detectChanges();
-    jest.spyOn(component.gshLevelElementRef.first.nativeElement, 'focus');
-    component.focusFirstChild(0, false);
+      return column;
+    });
 
-    expect(component.gshLevelElementRef.get(0)?.nativeElement.focus).toBeCalledTimes(1);
-  });
+    this.columnCatalogue = this.columnCatalogue.map((category) => {
+      if (category.categoryId === positioningColumnSet.categoryId) {
+        return {
+          ...category,
+          packets: category.packets.map((packet) => {
+            if (packet.packetId === positioningColumnSet.packetId) {
+              return {
+                ...packet,
+                columns: this.processGroupsInPositioningColumns(this.selectedPositioningColumns).map((account) => ({
+                  field: account.value,
+                  headerName: `${account.shortName} [${account.value}]`,
+                  columnProperties: {},
+                })),
+              };
+            }
 
-  it('should select parent dropdown child when out of bounds downwards', () => {
-    fixture.detectChanges();
-    const $event = {
-      direction: 'down',
-      currentSelected: 0,
-      onDropdown: true,
+            return packet;
+          }),
+        };
+      }
+
+      return category;
+    });
+  }
+
+  private buildPredicatesFilterModel(predicates: PredicateInQueryWithID[]): Record<string, BucketGroupFilterModel> {
+    const groupedPredicates = groupBy(predicates, 'leftOperand');
+    const filterModel: Record<string, BucketGroupFilterModel> = {};
+
+    Object.keys(groupedPredicates).forEach((leftOperand) => {
+      const dimension = this.allowedDimensions.find((_dimension) => _dimension.field === leftOperand);
+      const columnId = last(leftOperand.split(ALLOWED_DIMENSIONS_SEPARATOR));
+
+      if (!dimension || !columnId) {
+        return;
+      }
+
+      if (groupedPredicates[leftOperand].length > 1) {
+        filterModel[columnId] = {
+          filterType: dimension.type,
+          operator: 'OR',
+          conditions: groupedPredicates[leftOperand].map((predicate) => this.buildPredicateCondition(dimension, predicate)),
+        };
+      } else {
+        const predicate = groupedPredicates[leftOperand][0];
+        filterModel[columnId] = this.buildPredicateCondition(dimension, predicate);
+      }
+    });
+
+    return filterModel;
+  }
+
+  private buildPredicateCondition(dimension: AllowedDimension, predicate: PredicateInQueryWithID): BucketGroupFilterModel {
+    const baseFilter: Partial<BucketGroupFilterModel> = {
+      filterType: dimension.type,
+      type: AllowedDimensionsOperatorsAgGridTranslation[predicate.operator as AllowedDimensionsOperators],
     };
 
-    jest.spyOn(component.dropdownElementRef.get($event.currentSelected + 1)?.nativeElement as HTMLElement, 'focus');
+    const additionalProps: Partial<BucketGroupFilterModel> = {};
+    const rightOperand = predicate.rightOperand as any;
 
-    component.detectOutOfBounds($event);
+    if (baseFilter.filterType === AllowedDimensionTypes.DATE) {
+      const dateFrom: string = predicate.operator !== AllowedDimensionsOperators.between ? rightOperand : rightOperand.operand1.value;
+      const dateTo: string = predicate.operator === AllowedDimensionsOperators.between ? rightOperand.operand2.value : undefined;
+      additionalProps.dateFrom = this.convertHumanDateToISO(dateFrom);
+      additionalProps.dateTo = this.convertHumanDateToISO(dateTo);
+    } else {
+      additionalProps.filter = predicate.operator !== AllowedDimensionsOperators.between ? rightOperand : rightOperand.operand1.value;
+      additionalProps.filterTo = predicate.operator === AllowedDimensionsOperators.between ? rightOperand.operand2.value : undefined;
+    }
 
-    expect(component.dropdownElementRef.get($event.currentSelected + 1)?.nativeElement.focus).toBeCalledTimes(1);
-  });
+    return {
+      ...baseFilter,
+      ...additionalProps,
+    } satisfies BucketGroupFilterModel;
+  }
 
-  it('should select parent gsh level child when out of bounds downwards', () => {
-    fixture.detectChanges();
-    const $event = {
-      direction: 'down',
-      currentSelected: 0,
-      onDropdown: false,
-    };
+  private convertHumanDateToISO(dateString: string | undefined): string | undefined {
+    if (!dateString) {
+      return;
+    }
 
-    jest.spyOn(component.gshLevelElementRef.get($event.currentSelected + 1)?.nativeElement as HTMLElement, 'focus');
+    return DateTime.fromFormat(dateString, 'd MMM yyyy').toISO({ suppressMilliseconds: true, includeOffset: false }).replace('T', ' ');
+  }
 
-    component.detectOutOfBounds($event);
+  private filterAnalytics(filters: PredicateInQuery[], clearing: boolean, eventName: AnalyticsEvents): void {
+    const { dashboardId, id, type } = this.view || {};
+    if (clearing) {
+      this.analytics.event(AnalyticsEvents.CLEAR_ALL_FILTERS, {
+        [AnalyticsProperties.DASHBOARD_ID]: dashboardId,
+        [AnalyticsProperties.DASHBOARD_TYPE]: type,
+        [AnalyticsProperties.VIEW_ID]: id,
+      });
 
-    expect(component.gshLevelElementRef.get($event.currentSelected + 1)?.nativeElement.focus).toBeCalledTimes(1);
-  });
+      return;
+    }
 
-  it('should select parent dropdown when out of bounds upwards', () => {
-    fixture.detectChanges();
-    const $event = {
-      direction: 'up',
-      currentSelected: 0,
-      onDropdown: true,
-    };
+    this.analytics.event(eventName, {
+      [AnalyticsProperties.DASHBOARD_ID]: dashboardId,
+      [AnalyticsProperties.DASHBOARD_TYPE]: type,
+      [AnalyticsProperties.FILTERS]: filters.map((predicate) => predicate.leftOperand),
+      [AnalyticsProperties.FILTER_VALUES]: filters.map((predicate) => predicate.rightOperand),
+      [AnalyticsProperties.VIEW_ID]: id,
+    });
+  }
 
-    jest.spyOn(component.dropdownElementRef.get($event.currentSelected)?.nativeElement as HTMLElement, 'focus');
+  private processGroupsInPositioningColumns(positionalColumns: PositionalColumn[]): PositionalColumn[] {
+    const processedPositionalColumns: PositionalColumn[] = [];
 
-    component.detectOutOfBounds($event);
+    (positionalColumns || []).forEach((column) => {
+      if (column.isGroup) {
+        const accountGroup = this.accountGroups[column.value];
 
-    expect(component.dropdownElementRef.get($event.currentSelected)?.nativeElement.focus).toBeCalledTimes(1);
-  });
+        if (accountGroup) {
+          processedPositionalColumns.push(
+            ...accountGroup
+              .filter((source) => source.source === SourceType.INVEST1)
+              .map((source) => ({ value: source.value, shortName: source.name || source.value })),
+          );
+        }
+      } else {
+        processedPositionalColumns.push({
+          ...column,
+          value: column.value ?? column.invest1Id,
+        });
+      }
+    });
 
-  it('should select parent gsh level when out of bounds upwards', () => {
-    fixture.detectChanges();
-    const $event = {
-      direction: 'up',
-      currentSelected: 0,
-      onDropdown: false,
-    };
+    return processedPositionalColumns;
+  }
 
-    jest.spyOn(component.gshLevelElementRef.get($event.currentSelected)?.nativeElement as HTMLElement, 'focus');
+  private recurseParentLevels(node: IRowNode | RowNode): string {
+    if (!node.key) {
+      return '';
+    }
 
-    component.detectOutOfBounds($event);
+    const levels: string[] = [node.key];
+    let parent = node.parent;
 
-    expect(component.gshLevelElementRef.get($event.currentSelected)?.nativeElement.focus).toBeCalledTimes(1);
-  });
+    while (parent !== null) {
+      if (!parent.key) {
+        break;
+      }
 
-  it('should emit downwards out of bounds event when at bottom of levels on Arrow Down keypress', () => {
-    fixture.detectChanges();
-    const currentSelected = 1;
-    jest.spyOn(component.outOfBounds, 'emit');
+      levels.push(parent.key);
+      parent = parent.parent;
+    }
 
-    const $event = new KeyboardEvent('keydown', { code: 'ArrowDown' });
-    const fin = { id: '', value: 'Fin', children: [] } as GSH;
-    const corp = { id: '', value: 'Corp', children: [fin] } as GSH;
+    return levels.reverse().join('-');
+  }
 
-    component.gshValues = [corp];
+  private saveFiltersToView(before: PredicateInQueryWithID[], after: PredicateInQueryWithID[], { clearing = false, afterFloatingFilter = false }): void {
+    const beforePredicatesWithoutID = before.map(({ leftOperand, rightOperand, operator }) => {
+      return { leftOperand, rightOperand, operator };
+    });
 
-    component.navigateSelector($event, corp, currentSelected);
+    const afterPredicatesWithoutID = after.map(({ leftOperand, rightOperand, operator }) => {
+      return { leftOperand, rightOperand, operator };
+    });
 
-    expect(component.outOfBounds.emit).toBeCalledTimes(1);
-    expect(component.outOfBounds.emit).toBeCalledWith({ direction: 'down', currentSelected: component.parentPosition, onDropdown: component.onDropdown });
-  });
+    if (isEqual(beforePredicatesWithoutID, afterPredicatesWithoutID)) {
+      return;
+    }
 
-  it('should select the next dropdown in level on Arrow Down keypress', () => {
-    fixture.detectChanges();
-    const currentSelected = 0;
-    jest.spyOn(component.dropdownElementRef.get(currentSelected + 1)?.nativeElement as HTMLElement, 'focus');
+    this.viewsService.updateView(this.view, 'filters', afterPredicatesWithoutID);
 
-    const $event = new KeyboardEvent('keydown', { code: 'ArrowDown' });
-    const fin = { id: '', value: 'Fin', children: [] } as GSH;
-    const corp = { id: '', value: 'Corp', children: [] } as GSH;
-
-    component.gshValues = [corp, fin];
-
-    component.navigateSelector($event, corp, currentSelected);
-
-    expect(component.dropdownElementRef.get(currentSelected + 1)?.nativeElement.focus).toBeCalledTimes(1);
-  });
-
-  it('should select the next gsh level in level on Arrow Down keypress', () => {
-    fixture.detectChanges();
-    const currentSelected = 0;
-    jest.spyOn(component.gshLevelElementRef.get(currentSelected + 1)?.nativeElement as HTMLElement, 'focus');
-
-    const $event = new KeyboardEvent('keydown', { code: 'ArrowDown' });
-    const fin = { id: '', value: 'Fin', children: [] } as GSH;
-    const corp = { id: '', value: 'Corp', children: [] } as GSH;
-
-    component.gshValues = [corp, fin];
-    component.onDropdown = false;
-
-    component.navigateSelector($event, corp, currentSelected);
-
-    expect(component.gshLevelElementRef.get(currentSelected + 1)?.nativeElement.focus).toBeCalledTimes(1);
-  });
-
-  it('should emit upwards out of bounds event when on a childless level on Arrow Up keypress', () => {
-    fixture.detectChanges();
-    const currentSelected = 0;
-    jest.spyOn(component.outOfBounds, 'emit');
-
-    const $event = new KeyboardEvent('keydown', { code: 'ArrowUp' });
-    const corp = { id: '', value: 'Corp', children: [] } as GSH;
-
-    component.gshValues = [corp];
-
-    component.navigateSelector($event, corp, currentSelected);
-
-    expect(component.outOfBounds.emit).toBeCalledTimes(1);
-    expect(component.outOfBounds.emit).toBeCalledWith({ direction: 'up', currentSelected: component.parentPosition, onDropdown: true });
-  });
-
-  it('should select the above dropdown on Arrow Up keypress', () => {
-    fixture.detectChanges();
-    const currentSelected = 1;
-    jest.spyOn(component.dropdownElementRef.get(currentSelected - 1)?.nativeElement as HTMLElement, 'focus');
-
-    const $event = new KeyboardEvent('keydown', { code: 'ArrowUp' });
-    const corp = { id: '', value: 'Corp', children: [] } as GSH;
-
-    component.navigateSelector($event, corp, currentSelected);
-
-    expect(component.dropdownElementRef.get(currentSelected - 1)?.nativeElement.focus).toBeCalledTimes(1);
-  });
-
-  it('should select the above gsh level on Arrow Up keypress', () => {
-    fixture.detectChanges();
-    const currentSelected = 1;
-    component.onDropdown = false;
-    jest.spyOn(component.gshLevelElementRef.get(currentSelected - 1)?.nativeElement as HTMLElement, 'focus');
-
-    const $event = new KeyboardEvent('keydown', { code: 'ArrowUp' });
-    const corp = { id: '', value: 'Corp', children: [] } as GSH;
-
-    component.navigateSelector($event, corp, currentSelected);
-
-    expect(component.gshLevelElementRef.get(currentSelected - 1)?.nativeElement.focus).toBeCalledTimes(1);
-  });
-
-  it('should select the corresponding dropdown if no childless gsh level on Arrow Left keypress', () => {
-    const currentSelected = 0;
-
-    const $event = new KeyboardEvent('keydown', { code: 'ArrowLeft' });
-    const advertising = { id: '', value: 'Advertising', children: [] } as GSH;
-    const agency = { id: '', value: 'Agency', children: [advertising] } as GSH;
-
-    fixture.detectChanges();
-    jest.spyOn(component.dropdownElementRef.get(currentSelected)?.nativeElement as HTMLElement, 'focus');
-
-    component.navigateSelector($event, agency, currentSelected);
-
-    expect(component.dropdownElementRef.get(currentSelected)?.nativeElement.focus).toBeCalledTimes(1);
-    expect(component.onDropdown).toEqual(true);
-  });
-
-  it('should select the corresponding gsh level on Arrow Right keypress', () => {
-    const currentSelected = 0;
-
-    const $event = new KeyboardEvent('keydown', { code: 'ArrowRight' });
-    const agency = { id: '', value: 'Agency', children: [] } as GSH;
-
-    fixture.detectChanges();
-    jest.spyOn(component.gshLevelElementRef.get(currentSelected)?.nativeElement as HTMLElement, 'focus');
-
-    component.navigateSelector($event, agency, currentSelected);
-
-    expect(component.gshLevelElementRef.get(currentSelected)?.nativeElement.focus).toBeCalledTimes(1);
-    expect(component.onDropdown).toEqual(false);
-  });
-});
+    this.filterAnalytics(
+      afterPredicatesWithoutID,
+      clearing,
+      afterFloatingFilter ? AnalyticsEvents.FILTER_USING_COLUMN : AnalyticsEvents.FILTER_USING_COLUMN_MENU,
+    );
+  }
+}
