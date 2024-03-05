@@ -2,7 +2,7 @@ import { ButtonModule } from '@gs-ux-uitoolkit-angular/button';
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Inject, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { debounceTime, Subject } from 'rxjs';
-import { every, findIndex, first, orderBy, some } from 'lodash-es';
+import { every, findIndex, first, isEmpty, orderBy, some } from 'lodash-es';
 import { IconModule } from '@gs-ux-uitoolkit-angular/icon-font';
 import { InputModule } from '@gs-ux-uitoolkit-angular/input';
 import { TreeInstance, TreeModule, TreeNode, TreeNodeMap, TreeOptions } from '@gs-ux-uitoolkit-angular/tree';
@@ -25,7 +25,7 @@ import { DragDropListsContentDirective } from '../drag-drop-lists/drag-drop-list
     DragDropListsContentDirective,
     IconModule,
     InputModule,
-    TreeModule
+    TreeModule,
   ],
   providers: [{
       provide: BASE_COLUMN_PICKER,
@@ -43,6 +43,8 @@ export class ColumnPickerComponent implements OnInit, OnChanges, OnDestroy {
   @Output() readonly closed: EventEmitter<void> = new EventEmitter();
   tags: string[] = ["All", "FI IG", "FI HY", "FI EM", "FI Sovs", "FI Muni", "Equities"];
   activeTag: string = "All";
+  activeTreeParentKey: string | undefined = '';
+  activeTreeKey = '';
   catalogueAsTree: ColumnCategories[] = [];
   listItems: DragDropItem<ColumnListData>[] = [];
   hiddenCategories: Record<string, boolean> = {};
@@ -80,7 +82,7 @@ export class ColumnPickerComponent implements OnInit, OnChanges, OnDestroy {
       this.treeInstances.forEach((instance) => {
         let category = '';
         const api = instance.api;
-        const searchState = { ...api.getState() } as Record<string, TreeNode & { expanded: boolean; visible: boolean; childrenKeys: string[] }>;
+        const searchState = { ...api.getState() } as Record<string, TreeNode & { expanded: boolean; visible: boolean; childrenKeys: string[], parentKey: string | undefined }>;
         Object.keys(searchState).forEach((key) => {
           let visible = true;
           category = first(key.split('|')) || '';
@@ -91,9 +93,16 @@ export class ColumnPickerComponent implements OnInit, OnChanges, OnDestroy {
               searchState[child].childrenKeys.some((cName) => searchState[cName].name.toLowerCase().includes(value.toLowerCase())),
           );
 
-          if (!searchState[key].name.toLowerCase().includes(value.toLowerCase()) && !hasChildren) {
-            visible = false;
-          }
+            if(this.activeTag !== "All" && !isEmpty(this.activeTreeKey)) {
+              if(!(this.activeTreeParentKey === key) && !key.includes(this.activeTreeKey) && !searchState[key].name.toLowerCase().includes(value.toLowerCase()) && !hasChildren){
+                visible = false;
+              }
+            } else if (!searchState[key].name.toLowerCase().includes(value.toLowerCase()) && !hasChildren) {
+              visible = false;
+            } else {
+              this.activeTreeParentKey = searchState[key].parentKey;
+              this.activeTreeKey = key;
+            }
 
           searchState[key] = {
             ...searchState[key],
@@ -103,7 +112,7 @@ export class ColumnPickerComponent implements OnInit, OnChanges, OnDestroy {
         });
 
         this.hiddenCategories[category] = every(searchState, { visible: false });
-
+        console.log('searchState', searchState);
         api.setState(searchState);
       });
 
@@ -160,6 +169,14 @@ export class ColumnPickerComponent implements OnInit, OnChanges, OnDestroy {
   close(): void {
     this.closed.emit();
     this.analytics.event(AnalyticsEvents.CLOSE_COLUMN_PICKER, {});
+  }
+
+  switchQuickFilterTags(tag: string): void {
+    console.log(tag);
+    this.activeTag = tag;
+    this.activeTreeKey = '';
+    this.activeTreeParentKey = '';
+    this.treeFilter$.next(tag === "All"?'': tag);
   }
 
   columnsReordered(columns: DragDropItem<ColumnListData>[]): void {
@@ -248,6 +265,7 @@ export class ColumnPickerComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 }
+
 
 
 
