@@ -1,3 +1,235 @@
+should toggle overflow filter menu when clicked (369 ms)
+
+  ● Column Picker Component › should toggle overflow filter menu when clicked
+
+    The code should be running in the fakeAsync zone to call this function
+
+      193 |     expect(component.treeInstances[1].api.setState).not.toHaveBeenCalled();
+      194 |     // expect(component.treeInstances[2].api.setState).not.toHaveBeenCalled();
+    > 195 |     tick(250);
+          |         ^
+      196 |
+      197 |     expect(component.treeInstances[0].api.setState).toHaveBeenCalledWith({
+      198 |       "productIdentifiers|productIdentifiers|LongDescription": {
+
+      at _getFakeAsyncZoneSpec (../../node_modules/.pnpm/zone.js@0.14.2/node_modules/zone.js/bundles/zone-testing.umd.js:2109:27)
+      at Object.tick (../../node_modules/.pnpm/zone.js@0.14.2/node_modules/zone.js/bundles/zone-testing.umd.js:2129:13)
+      at tick (../../node_modules/.pnpm/@angular+core@17.0.7_rxjs@7.8.1_zone.js@0.14.2/node_modules/@angular/core/fesm2022/testing.mjs:455
+
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { CUSTOM_ELEMENTS_SCHEMA, SimpleChange } from '@angular/core';
+import { TreeAPI, TreeInstance } from '@gs-ux-uitoolkit-angular/tree';
+import { when } from 'jest-when';
+
+import { BaseColumnPicker } from '@gsam-fi/grids/column-picker';
+import { catalogue, catalogueAsTree } from '@gsam-fi/grids/mocks';
+import { GsAnalyticsService } from '@gsam-fi/common';
+
+import { BASE_COLUMN_PICKER } from './column-picker.tokens';
+import { ColumnPickerComponent } from './column-picker.component';
+import { CommonModule } from '@angular/common';
+import { DetectOverflowModule } from '../helpers/detect-overflow.module';
+
+describe('Column Picker Component', () => {
+  let baseColumnPicker: jest.Mocked<BaseColumnPicker>;
+  let component: ColumnPickerComponent;
+  let fixture: ComponentFixture<ColumnPickerComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [ColumnPickerComponent],
+      providers: [
+        {
+          provide: GsAnalyticsService,
+          useValue: createSpyObj('GsAnalyticsService', ['bulkEvent', 'event']),
+        },
+      ],
+    }).overrideComponent(ColumnPickerComponent, {
+      set: {
+        imports: [CommonModule, DetectOverflowModule],
+        schemas: [CUSTOM_ELEMENTS_SCHEMA],
+        providers: [{
+          provide: BASE_COLUMN_PICKER,
+          useValue: createSpyObj('BaseColumnPicker', [
+            'getOptions',
+            'processCatalogueAsTree',
+            'generatePacketsFromSelectedColumns',
+            'getSelectedColumnSetsInOrder',
+            'registerTreeInstance',
+            'orderSelectedPacketsIntoListItems',
+          ]),
+        }]
+      }
+    }).compileComponents();
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(ColumnPickerComponent);
+    component = fixture.componentInstance;
+    baseColumnPicker = fixture.componentRef.injector.get(BASE_COLUMN_PICKER) as jest.Mocked<BaseColumnPicker>;
+    baseColumnPicker.registerTreeInstance.mockReturnValue({
+      api: {
+        getState: () => ({}),
+        setState: () => undefined,
+        select: () => undefined,
+        deselectAllNodes: () => undefined,
+      } as unknown as TreeAPI,
+      on: () => undefined,
+      off: () => undefined,
+    });
+  });
+
+  it('should toggle overflow filter menu when clicked', () => {
+    component.catalogue = catalogue;
+    component.catalogueAsTree = catalogueAsTree;
+    component.tags = ["All", "FI IG", "FI HY", "FI EM", "FI Sovs", "FI Muni", "Equities"];
+    fixture.detectChanges();
+    component.treeInstances = [
+      {
+        api: {
+          getState: () => ({
+            "productIdentifiers|productIdentifiers|LongDescription": {
+                "childrenKeys": [],
+                "name": "Description",
+                "key": "productIdentifiers|productIdentifiers|LongDescription",
+                "visible": true,
+            }
+        }),
+          setState: jest.fn(),
+        },
+      },
+      {
+        api: {
+          getState: () => ({
+            "esg|engagements|engagementsDataLY.numberOfFIEngagementsHeld": {
+                "childrenKeys": [],
+                "name": "# of Completed FI Engagements Last Year",
+                "key": "esg|engagements|engagementsDataLY.numberOfFIEngagementsHeld",
+                "parentKey": "esg|engagements",
+                "visible": true,
+            },
+            "esg|engagements|engagementsDataTY.numberOfFIEngagementsHeld": {
+                "childrenKeys": [],
+                "name": "# of Completed FI Engagements This Year",
+                "key": "esg|engagements|engagementsDataTY.numberOfFIEngagementsHeld",
+                "parentKey": "esg|engagements",
+                "visible": true,
+            },
+            "esg|engagements": {
+                "childrenKeys": [
+                    "esg|engagements|engagementsDataLY.numberOfFIEngagementsHeld",
+                    "esg|engagements|engagementsDataTY.numberOfFIEngagementsHeld"
+                ],
+                "name": "Engagements",
+                "key": "esg|engagements",
+                "visible": true,
+            }
+        }),
+          setState: jest.fn(),
+        },
+      },{
+        api: {
+          getState: () => ({
+            "researchLastUpdated|analystCommentaryIg|commentary.CORPORATE_ACTION.updatedTime": {
+                "childrenKeys": [],
+                "name": "Corporate Action",
+                "key": "researchLastUpdated|analystCommentaryIg|commentary.CORPORATE_ACTION.updatedTime",
+                "parentKey": "researchLastUpdated|analystCommentaryIg",
+                "visible": true,
+            },
+            "researchLastUpdated|analystCommentaryIg|commentary.STRESSED_OR_DISTRESSED.updatedTime": {
+                "childrenKeys": [],
+                "name": "Stressed / Distressed",
+                "key": "researchLastUpdated|analystCommentaryIg|commentary.STRESSED_OR_DISTRESSED.updatedTime",
+                "parentKey": "researchLastUpdated|analystCommentaryIg",
+                "visible": true,
+            },
+            "researchLastUpdated|analystCommentaryIg": {
+                "childrenKeys": [
+                    "researchLastUpdated|analystCommentaryIg|commentary.CORPORATE_ACTION.updatedTime",
+                    "researchLastUpdated|analystCommentaryIg|commentary.STRESSED_OR_DISTRESSED.updatedTime"
+                ],
+                "name": "FI IG",
+                "key": "researchLastUpdated|analystCommentaryIg",
+                "visible": true,
+            },
+            "researchLastUpdated|analystCommentaryHy|commentary.CORPORATE_ACTION.updatedTime": {
+                "childrenKeys": [],
+                "name": "Corporate Action",
+                "key": "researchLastUpdated|analystCommentaryHy|commentary.CORPORATE_ACTION.updatedTime",
+                "parentKey": "researchLastUpdated|analystCommentaryHy",
+                "visible": true,
+            },
+            "researchLastUpdated|analystCommentaryHy|commentary.COMPANY_OVERVIEW.updatedTime": {
+                "childrenKeys": [],
+                "name": "Company Overview",
+                "key": "researchLastUpdated|analystCommentaryHy|commentary.COMPANY_OVERVIEW.updatedTime",
+                "parentKey": "researchLastUpdated|analystCommentaryHy",
+                "visible": true,
+            },
+            "researchLastUpdated|analystCommentaryHy": {
+                "childrenKeys": [
+                    "researchLastUpdated|analystCommentaryHy|commentary.CORPORATE_ACTION.updatedTime",
+                    "researchLastUpdated|analystCommentaryHy|commentary.COMPANY_OVERVIEW.updatedTime"
+                ],
+                "name": "FI HY",
+                "key": "researchLastUpdated|analystCommentaryHy",
+                "visible": true,
+            },
+            "researchLastUpdated|analystCommentaryEm|commentary.CORPORATE_ACTION.updatedTime": {
+                "childrenKeys": [],
+                "name": "Corporate Action",
+                "key": "researchLastUpdated|analystCommentaryEm|commentary.CORPORATE_ACTION.updatedTime",
+                "parentKey": "researchLastUpdated|analystCommentaryEm",
+                "visible": true,
+            },
+            "researchLastUpdated|analystCommentaryEm|commentary.STRESSED_OR_DISTRESSED.updatedTime": {
+                "childrenKeys": [],
+                "name": "Stressed / Distressed",
+                "key": "researchLastUpdated|analystCommentaryEm|commentary.STRESSED_OR_DISTRESSED.updatedTime",
+                "parentKey": "researchLastUpdated|analystCommentaryEm",
+                "visible": true,
+            },
+            "researchLastUpdated|analystCommentaryEm": {
+                "childrenKeys": [
+                    "researchLastUpdated|analystCommentaryEm|commentary.CORPORATE_ACTION.updatedTime",
+                    "researchLastUpdated|analystCommentaryEm|commentary.STRESSED_OR_DISTRESSED.updatedTime"
+                ],
+                "name": "FI EM",
+                "key": "researchLastUpdated|analystCommentaryEm",
+                "visible": true,
+            }
+        }),
+          setState: jest.fn(),
+        },
+      }
+    ] as unknown as TreeInstance[];
+    component.switchQuickFilterTags('FI IG');
+
+    // nothing should happen until 250ms after the last key press
+    expect(component.treeInstances[0].api.setState).not.toHaveBeenCalled();
+    expect(component.treeInstances[1].api.setState).not.toHaveBeenCalled();
+    // expect(component.treeInstances[2].api.setState).not.toHaveBeenCalled();
+    tick(250);
+    
+    expect(component.treeInstances[0].api.setState).toHaveBeenCalledWith({
+      "productIdentifiers|productIdentifiers|LongDescription": {
+          "childrenKeys": [],
+          "name": "Description",
+          "key": "productIdentifiers|productIdentifiers|LongDescription",
+          "visible": false,
+      }
+  });
+  });
+});
+
+
+
+
+
+
+
+
 import { ButtonComponent, ButtonModule } from '@gs-ux-uitoolkit-angular/button';
 import { ChangeDetectorRef, Component, EventEmitter, Inject, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
