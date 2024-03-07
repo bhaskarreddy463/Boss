@@ -1,3 +1,6 @@
+ERROR Error: NG0100: ExpressionChangedAfterItHasBeenCheckedError: Expression has changed after it was checked. Previous value: '[]'. Current value: '[{"id":"productIdentifiers|productIdentifiers","data":{"id":"productIdentifiers|productIdentifiers","includedColumns":[{"field":"LongDescription","headerName":"Description","shortHeaderName":"Descript…'. Expression location: _ColumnPickerComponent component.
+
+
 should toggle overflow filter menu when clicked (369 ms)
 
   ● Column Picker Component › should toggle overflow filter menu when clicked
