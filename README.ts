@@ -1,3 +1,11 @@
+<gs-checkbox size="sm" *ngFor="let metric of type.sources; trackBy: trackMetric"
+            [disabled]="type.id === 'sizingAndContribution' && selectedMetrics[type.id] && selectedMetrics[type.id].sources.includes(metric.fieldName) && selectedMetrics[type.id].sources.length === 1"
+            [value]="metric.fieldName"
+            [checked]="selectedMetrics[type.id] && selectedMetrics[type.id].sources.includes(metric.fieldName)"
+            (change)="selectOption($event, type.id, 'sources')">{{ metric.displayName }}
+          </gs-checkbox>
+
+
 ERROR Error: NG0100: ExpressionChangedAfterItHasBeenCheckedError: Expression has changed after it was checked. Previous value: '[]'. Current value: '[{"id":"productIdentifiers|productIdentifiers","data":{"id":"productIdentifiers|productIdentifiers","includedColumns":[{"field":"LongDescription","headerName":"Description","shortHeaderName":"Descript…'. Expression location: _ColumnPickerComponent component.
 
 
