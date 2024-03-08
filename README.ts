@@ -1,244 +1,74 @@
-<gs-checkbox size="sm" *ngFor="let metric of type.sources; trackBy: trackMetric"
-            [disabled]="type.id === 'sizingAndContribution' && selectedMetrics[type.id] && selectedMetrics[type.id].sources.includes(metric.fieldName) && selectedMetrics[type.id].sources.length === 1"
-            [value]="metric.fieldName"
-            [checked]="selectedMetrics[type.id] && selectedMetrics[type.id].sources.includes(metric.fieldName)"
-            (change)="selectOption($event, type.id, 'sources')">{{ metric.displayName }}
-          </gs-checkbox>
+import { Directive, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { fromEvent, merge, Subject, takeUntil } from 'rxjs';
 
+import { observeResize } from './observe-resize.helper';
 
-ERROR Error: NG0100: ExpressionChangedAfterItHasBeenCheckedError: Expression has changed after it was checked. Previous value: '[]'. Current value: '[{"id":"productIdentifiers|productIdentifiers","data":{"id":"productIdentifiers|productIdentifiers","includedColumns":[{"field":"LongDescription","headerName":"Description","shortHeaderName":"Descript…'. Expression location: _ColumnPickerComponent component.
+@Directive({ selector: '[metricsDetectOverflow]' })
+export class MetricsDetectOverflowDirective implements OnInit, OnDestroy {
+  @Input() reservedWidth = 0;
+  @Input() container!: HTMLDivElement;
+  @Output() readonly overflowingElementIndex = new EventEmitter<number>();
+  private destroyObservables$: Subject<boolean> = new Subject();
 
+  constructor(private el: ElementRef<HTMLDivElement>) {}
 
-should toggle overflow filter menu when clicked (369 ms)
+  ngOnInit(): void {
+    merge(observeResize(this.container ?? this.el.nativeElement), fromEvent(window, 'resize'))
+      .pipe(takeUntil(this.destroyObservables$))
+      .subscribe(() => {
+        let breachedIndex = -1;
+        let spaceTaken = this.reservedWidth; // add in overflow button space
+        const width = this.container ? this.container.offsetWidth : this.el.nativeElement.offsetWidth;
 
-  ● Column Picker Component › should toggle overflow filter menu when clicked
+        for (let index = 0; index < this.el.nativeElement.children.length; index++) {
+          const childElement = this.el.nativeElement.children[index];
 
-    The code should be running in the fakeAsync zone to call this function
+          if (childElement.classList.contains('d-none') || childElement.classList.contains('aggregation-table__sub-sections-more-button')) {
+            continue;
+          }
 
-      193 |     expect(component.treeInstances[1].api.setState).not.toHaveBeenCalled();
-      194 |     // expect(component.treeInstances[2].api.setState).not.toHaveBeenCalled();
-    > 195 |     tick(250);
-          |         ^
-      196 |
-      197 |     expect(component.treeInstances[0].api.setState).toHaveBeenCalledWith({
-      198 |       "productIdentifiers|productIdentifiers|LongDescription": {
+          const rectBox = childElement.getBoundingClientRect();
+          const styles = getComputedStyle(childElement);
+          spaceTaken += rectBox.width + parseInt(styles.marginLeft) + parseInt(styles.marginRight);
 
-      at _getFakeAsyncZoneSpec (../../node_modules/.pnpm/zone.js@0.14.2/node_modules/zone.js/bundles/zone-testing.umd.js:2109:27)
-      at Object.tick (../../node_modules/.pnpm/zone.js@0.14.2/node_modules/zone.js/bundles/zone-testing.umd.js:2129:13)
-      at tick (../../node_modules/.pnpm/@angular+core@17.0.7_rxjs@7.8.1_zone.js@0.14.2/node_modules/@angular/core/fesm2022/testing.mjs:455
+          if (spaceTaken > width) {
+            breachedIndex = index;
+            this.overflowingElementIndex.emit(breachedIndex);
+            break;
+          }
+        }
 
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { CUSTOM_ELEMENTS_SCHEMA, SimpleChange } from '@angular/core';
-import { TreeAPI, TreeInstance } from '@gs-ux-uitoolkit-angular/tree';
-import { when } from 'jest-when';
+        // if we're still not overflowing we'll emit a negative amount of the ones we can probably fit
+        if (spaceTaken <= width) {
+          const remainingElements = Array.from(this.el.nativeElement.children).filter((elem) => elem.classList.contains('d-none'));
+          let blankSpaceRemaining = width - spaceTaken;
+          let elementsToAdd = 0;
 
-import { BaseColumnPicker } from '@gsam-fi/grids/column-picker';
-import { catalogue, catalogueAsTree } from '@gsam-fi/grids/mocks';
-import { GsAnalyticsService } from '@gsam-fi/common';
+          for (let index = 0; index < remainingElements.length; index++) {
+            const childElement = remainingElements[index] as HTMLDivElement;
+            childElement.setAttribute('style', 'display: initial !important;');
+            const styles = getComputedStyle(childElement);
+            const rectBox = childElement.getBoundingClientRect();
+            blankSpaceRemaining -= rectBox.width + parseInt(styles.marginLeft) + parseInt(styles.marginRight);
+            childElement.setAttribute('style', '');
 
-import { BASE_COLUMN_PICKER } from './column-picker.tokens';
-import { ColumnPickerComponent } from './column-picker.component';
-import { CommonModule } from '@angular/common';
-import { DetectOverflowModule } from '../helpers/detect-overflow.module';
-
-describe('Column Picker Component', () => {
-  let baseColumnPicker: jest.Mocked<BaseColumnPicker>;
-  let component: ColumnPickerComponent;
-  let fixture: ComponentFixture<ColumnPickerComponent>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [ColumnPickerComponent],
-      providers: [
-        {
-          provide: GsAnalyticsService,
-          useValue: createSpyObj('GsAnalyticsService', ['bulkEvent', 'event']),
-        },
-      ],
-    }).overrideComponent(ColumnPickerComponent, {
-      set: {
-        imports: [CommonModule, DetectOverflowModule],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA],
-        providers: [{
-          provide: BASE_COLUMN_PICKER,
-          useValue: createSpyObj('BaseColumnPicker', [
-            'getOptions',
-            'processCatalogueAsTree',
-            'generatePacketsFromSelectedColumns',
-            'getSelectedColumnSetsInOrder',
-            'registerTreeInstance',
-            'orderSelectedPacketsIntoListItems',
-          ]),
-        }]
-      }
-    }).compileComponents();
-  });
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(ColumnPickerComponent);
-    component = fixture.componentInstance;
-    baseColumnPicker = fixture.componentRef.injector.get(BASE_COLUMN_PICKER) as jest.Mocked<BaseColumnPicker>;
-    baseColumnPicker.registerTreeInstance.mockReturnValue({
-      api: {
-        getState: () => ({}),
-        setState: () => undefined,
-        select: () => undefined,
-        deselectAllNodes: () => undefined,
-      } as unknown as TreeAPI,
-      on: () => undefined,
-      off: () => undefined,
-    });
-  });
-
-  it('should toggle overflow filter menu when clicked', () => {
-    component.catalogue = catalogue;
-    component.catalogueAsTree = catalogueAsTree;
-    component.tags = ["All", "FI IG", "FI HY", "FI EM", "FI Sovs", "FI Muni", "Equities"];
-    fixture.detectChanges();
-    component.treeInstances = [
-      {
-        api: {
-          getState: () => ({
-            "productIdentifiers|productIdentifiers|LongDescription": {
-                "childrenKeys": [],
-                "name": "Description",
-                "key": "productIdentifiers|productIdentifiers|LongDescription",
-                "visible": true,
+            if (blankSpaceRemaining < 0) {
+              break;
             }
-        }),
-          setState: jest.fn(),
-        },
-      },
-      {
-        api: {
-          getState: () => ({
-            "esg|engagements|engagementsDataLY.numberOfFIEngagementsHeld": {
-                "childrenKeys": [],
-                "name": "# of Completed FI Engagements Last Year",
-                "key": "esg|engagements|engagementsDataLY.numberOfFIEngagementsHeld",
-                "parentKey": "esg|engagements",
-                "visible": true,
-            },
-            "esg|engagements|engagementsDataTY.numberOfFIEngagementsHeld": {
-                "childrenKeys": [],
-                "name": "# of Completed FI Engagements This Year",
-                "key": "esg|engagements|engagementsDataTY.numberOfFIEngagementsHeld",
-                "parentKey": "esg|engagements",
-                "visible": true,
-            },
-            "esg|engagements": {
-                "childrenKeys": [
-                    "esg|engagements|engagementsDataLY.numberOfFIEngagementsHeld",
-                    "esg|engagements|engagementsDataTY.numberOfFIEngagementsHeld"
-                ],
-                "name": "Engagements",
-                "key": "esg|engagements",
-                "visible": true,
-            }
-        }),
-          setState: jest.fn(),
-        },
-      },{
-        api: {
-          getState: () => ({
-            "researchLastUpdated|analystCommentaryIg|commentary.CORPORATE_ACTION.updatedTime": {
-                "childrenKeys": [],
-                "name": "Corporate Action",
-                "key": "researchLastUpdated|analystCommentaryIg|commentary.CORPORATE_ACTION.updatedTime",
-                "parentKey": "researchLastUpdated|analystCommentaryIg",
-                "visible": true,
-            },
-            "researchLastUpdated|analystCommentaryIg|commentary.STRESSED_OR_DISTRESSED.updatedTime": {
-                "childrenKeys": [],
-                "name": "Stressed / Distressed",
-                "key": "researchLastUpdated|analystCommentaryIg|commentary.STRESSED_OR_DISTRESSED.updatedTime",
-                "parentKey": "researchLastUpdated|analystCommentaryIg",
-                "visible": true,
-            },
-            "researchLastUpdated|analystCommentaryIg": {
-                "childrenKeys": [
-                    "researchLastUpdated|analystCommentaryIg|commentary.CORPORATE_ACTION.updatedTime",
-                    "researchLastUpdated|analystCommentaryIg|commentary.STRESSED_OR_DISTRESSED.updatedTime"
-                ],
-                "name": "FI IG",
-                "key": "researchLastUpdated|analystCommentaryIg",
-                "visible": true,
-            },
-            "researchLastUpdated|analystCommentaryHy|commentary.CORPORATE_ACTION.updatedTime": {
-                "childrenKeys": [],
-                "name": "Corporate Action",
-                "key": "researchLastUpdated|analystCommentaryHy|commentary.CORPORATE_ACTION.updatedTime",
-                "parentKey": "researchLastUpdated|analystCommentaryHy",
-                "visible": true,
-            },
-            "researchLastUpdated|analystCommentaryHy|commentary.COMPANY_OVERVIEW.updatedTime": {
-                "childrenKeys": [],
-                "name": "Company Overview",
-                "key": "researchLastUpdated|analystCommentaryHy|commentary.COMPANY_OVERVIEW.updatedTime",
-                "parentKey": "researchLastUpdated|analystCommentaryHy",
-                "visible": true,
-            },
-            "researchLastUpdated|analystCommentaryHy": {
-                "childrenKeys": [
-                    "researchLastUpdated|analystCommentaryHy|commentary.CORPORATE_ACTION.updatedTime",
-                    "researchLastUpdated|analystCommentaryHy|commentary.COMPANY_OVERVIEW.updatedTime"
-                ],
-                "name": "FI HY",
-                "key": "researchLastUpdated|analystCommentaryHy",
-                "visible": true,
-            },
-            "researchLastUpdated|analystCommentaryEm|commentary.CORPORATE_ACTION.updatedTime": {
-                "childrenKeys": [],
-                "name": "Corporate Action",
-                "key": "researchLastUpdated|analystCommentaryEm|commentary.CORPORATE_ACTION.updatedTime",
-                "parentKey": "researchLastUpdated|analystCommentaryEm",
-                "visible": true,
-            },
-            "researchLastUpdated|analystCommentaryEm|commentary.STRESSED_OR_DISTRESSED.updatedTime": {
-                "childrenKeys": [],
-                "name": "Stressed / Distressed",
-                "key": "researchLastUpdated|analystCommentaryEm|commentary.STRESSED_OR_DISTRESSED.updatedTime",
-                "parentKey": "researchLastUpdated|analystCommentaryEm",
-                "visible": true,
-            },
-            "researchLastUpdated|analystCommentaryEm": {
-                "childrenKeys": [
-                    "researchLastUpdated|analystCommentaryEm|commentary.CORPORATE_ACTION.updatedTime",
-                    "researchLastUpdated|analystCommentaryEm|commentary.STRESSED_OR_DISTRESSED.updatedTime"
-                ],
-                "name": "FI EM",
-                "key": "researchLastUpdated|analystCommentaryEm",
-                "visible": true,
-            }
-        }),
-          setState: jest.fn(),
-        },
-      }
-    ] as unknown as TreeInstance[];
-    component.switchQuickFilterTags('FI IG');
 
-    // nothing should happen until 250ms after the last key press
-    expect(component.treeInstances[0].api.setState).not.toHaveBeenCalled();
-    expect(component.treeInstances[1].api.setState).not.toHaveBeenCalled();
-    // expect(component.treeInstances[2].api.setState).not.toHaveBeenCalled();
-    tick(250);
-    
-    expect(component.treeInstances[0].api.setState).toHaveBeenCalledWith({
-      "productIdentifiers|productIdentifiers|LongDescription": {
-          "childrenKeys": [],
-          "name": "Description",
-          "key": "productIdentifiers|productIdentifiers|LongDescription",
-          "visible": false,
-      }
-  });
-  });
-});
+            elementsToAdd++;
+          }
 
+          this.overflowingElementIndex.emit(-1 * elementsToAdd);
+        }
+      });
+  }
 
-
-
-
-
+  ngOnDestroy(): void {
+    this.destroyObservables$.next(true);
+    this.destroyObservables$.complete();
+  }
+}
 
 
 import { ButtonComponent, ButtonModule } from '@gs-ux-uitoolkit-angular/button';
@@ -253,31 +83,24 @@ import { TreeInstance, TreeModule, TreeNode, TreeNodeMap, TreeOptions } from '@g
 import { BaseColumnPicker } from '@gsam-fi/grids/column-picker';
 import { ColumnCategories, ColumnListData, DragDropItem, SelectedColumn, SelectedPacket } from '@gsam-fi/grids/typings';
 import { GsAnalyticsService, trackByField } from '@gsam-fi/common';
+import { MenuBlurEvent, MenuValueType } from '@gs-ux-uitoolkit-angular/menu';
 
 import { AnalyticsEvents, AnalyticsProperties } from '../../analytics.events';
 import { BASE_COLUMN_PICKER } from './column-picker.tokens';
 import { DetectOverflowModule } from '../helpers/detect-overflow.module';
 import { DragDropListsComponent } from '../drag-drop-lists/drag-drop-lists.component';
 import { DragDropListsContentDirective } from '../drag-drop-lists/drag-drop-lists.directive';
-import { MenuBlurEvent, MenuValueType } from '@gs-ux-uitoolkit-angular/menu';
 import { shouldBlurElementBeVisible } from '../helpers/gs-button.helper';
 
 @Component({
   selector: 'metrics-column-picker',
-  imports: [
-    CommonModule,
-    ButtonModule,
-    DragDropListsComponent,
-    DragDropListsContentDirective,
-    IconModule,
-    InputModule,
-    TreeModule,
-    DetectOverflowModule,
-  ],
-  providers: [{
+  imports: [CommonModule, ButtonModule, DragDropListsComponent, DragDropListsContentDirective, IconModule, InputModule, TreeModule, DetectOverflowModule],
+  providers: [
+    {
       provide: BASE_COLUMN_PICKER,
-      useClass: BaseColumnPicker
-  }],
+      useClass: BaseColumnPicker,
+    },
+  ],
   templateUrl: './column-picker.component.html',
   styleUrl: './column-picker.component.scss',
   standalone: true,
@@ -290,7 +113,7 @@ export class ColumnPickerComponent implements OnInit, OnChanges, OnDestroy {
   @Output() readonly closed: EventEmitter<void> = new EventEmitter();
   @ViewChild('overflowButton', { read: ButtonComponent }) readonly dropdownButtonRef!: ButtonComponent;
   tags: string[] = [];
-  activeTag: string = "All";
+  activeTag: string = 'All';
   activeTreeParentKey: string | undefined = '';
   activeTreeKey = '';
   searchText: string = '';
@@ -329,12 +152,12 @@ export class ColumnPickerComponent implements OnInit, OnChanges, OnDestroy {
     this.treeInstances = [];
     this.columnPickerImpl.catalogue = this.catalogue;
     this.catalogueAsTree = this.columnPickerImpl.processCatalogueAsTree(this.groupByTitle);
-    const accountPositioningObj = find(this.catalogueAsTree, {categoryId: "accountPositioning"});
+    const accountPositioningObj = find(this.catalogueAsTree, { categoryId: 'accountPositioning' });
     this.tags = accountPositioningObj?.packets[0].tags || [];
   }
 
   private callFilterTreeInstance(value: string): void {
-    if (this.activeTag === "All" && (!value?.length || value.length < 2)) {
+    if (this.activeTag === 'All' && (!value?.length || value.length < 2)) {
       this.treeInstances.forEach((instance, position) => {
         const state = this.originalTreeState[position];
         instance.api.setState(state);
@@ -349,7 +172,10 @@ export class ColumnPickerComponent implements OnInit, OnChanges, OnDestroy {
     this.treeInstances.forEach((instance) => {
       let category = '';
       const api = instance.api;
-      const searchState = { ...api.getState() } as Record<string, TreeNode & { expanded: boolean; visible: boolean; childrenKeys: string[], parentKey: string | undefined }>;
+      const searchState = { ...api.getState() } as Record<
+        string,
+        TreeNode & { expanded: boolean; visible: boolean; childrenKeys: string[]; parentKey: string | undefined }
+      >;
       Object.keys(searchState).forEach((key) => {
         let visible = true;
         category = first(key.split('|')) || '';
@@ -360,20 +186,20 @@ export class ColumnPickerComponent implements OnInit, OnChanges, OnDestroy {
             searchState[child].childrenKeys.some((cName) => searchState[cName].name.toLowerCase().includes(value.toLowerCase())),
         );
 
-          if(this.activeTag !== "All" && !isEmpty(this.activeTreeKey)) {
-            if((this.activeTreeParentKey === key) || key.includes(this.activeTreeKey)){
-              if (!searchState[key].name.toLowerCase().includes(value.toLowerCase()) && !hasChildren) {
-                visible = false;
-              }
-            } else {
+        if (this.activeTag !== 'All' && !isEmpty(this.activeTreeKey)) {
+          if (this.activeTreeParentKey === key || key.includes(this.activeTreeKey)) {
+            if (!searchState[key].name.toLowerCase().includes(value.toLowerCase()) && !hasChildren) {
               visible = false;
             }
-          } else if (!searchState[key].name.toLowerCase().includes(value.toLowerCase()) && !hasChildren) {
-            visible = false;
           } else {
-            this.activeTreeParentKey = searchState[key].parentKey;
-            this.activeTreeKey = key;
+            visible = false;
           }
+        } else if (!searchState[key].name.toLowerCase().includes(value.toLowerCase()) && !hasChildren) {
+          visible = false;
+        } else {
+          this.activeTreeParentKey = searchState[key].parentKey;
+          this.activeTreeKey = key;
+        }
 
         searchState[key] = {
           ...searchState[key],
@@ -446,11 +272,11 @@ export class ColumnPickerComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     this.analytics.event(AnalyticsEvents.CLICK_QUICK_DESK_FILTER, { [AnalyticsProperties.QUICK_DESK_FILTER]: tag });
-    
-    this.callFilterTreeInstance(tag === "All"?'': tag);
+
+    this.callFilterTreeInstance(tag === 'All' ? '' : tag);
   }
 
-  switchFilterViaMenu ($event: MenuValueType, button: ButtonComponent) : void {
+  switchFilterViaMenu($event: MenuValueType, button: ButtonComponent): void {
     const tag = $event?.toString();
 
     if (!tag || !this.overflowMenu.includes(tag)) {
@@ -518,7 +344,7 @@ export class ColumnPickerComponent implements OnInit, OnChanges, OnDestroy {
 
     const data = item.data;
     const tree = this.treeInstances.find((instance) => Object.keys(instance.api.getState()).includes(parentId ?? data.id));
-    
+
     if (tree) {
       tree.api.select(data.id);
       this.analytics.event(AnalyticsEvents.DESELECT_COLUMN_PACKET, { [AnalyticsProperties.SELECTED_PACKETS]: data.id });
@@ -546,7 +372,6 @@ export class ColumnPickerComponent implements OnInit, OnChanges, OnDestroy {
   private transformIntoListItems(selectedPackets: Record<string, SelectedPacket>): void {
     this.listItems = this.columnPickerImpl.orderSelectedPacketsIntoListItems(selectedPackets, this.columnOrdered);
     this.columnOrdered = this.listItems;
-    this.cd.detectChanges();
   }
 
   private analyticsCallback(callbackEvent: { type: string; identifiers: { categoryId: string; packetId: string; columnId?: string } }): void {
@@ -582,735 +407,6 @@ export class ColumnPickerComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 }
-
-
-
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { CUSTOM_ELEMENTS_SCHEMA, SimpleChange } from '@angular/core';
-import { TreeAPI, TreeInstance } from '@gs-ux-uitoolkit-angular/tree';
-import { when } from 'jest-when';
-
-import { BaseColumnPicker } from '@gsam-fi/grids/column-picker';
-import { catalogue, catalogueAsTree } from '@gsam-fi/grids/mocks';
-import { GsAnalyticsService } from '@gsam-fi/common';
-
-import { BASE_COLUMN_PICKER } from './column-picker.tokens';
-import { ColumnPickerComponent } from './column-picker.component';
-import { CommonModule } from '@angular/common';
-import { DetectOverflowModule } from '../helpers/detect-overflow.module';
-
-describe('Column Picker Component', () => {
-  let baseColumnPicker: jest.Mocked<BaseColumnPicker>;
-  let component: ColumnPickerComponent;
-  let fixture: ComponentFixture<ColumnPickerComponent>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [ColumnPickerComponent],
-      providers: [
-        {
-          provide: GsAnalyticsService,
-          useValue: createSpyObj('GsAnalyticsService', ['bulkEvent', 'event']),
-        },
-      ],
-    })
-      .overrideComponent(ColumnPickerComponent, {
-        set: {
-          imports: [CommonModule, DetectOverflowModule],
-          schemas: [CUSTOM_ELEMENTS_SCHEMA],
-          providers: [
-            {
-              provide: BASE_COLUMN_PICKER,
-              useValue: createSpyObj('BaseColumnPicker', [
-                'getOptions',
-                'processCatalogueAsTree',
-                'generatePacketsFromSelectedColumns',
-                'getSelectedColumnSetsInOrder',
-                'registerTreeInstance',
-                'orderSelectedPacketsIntoListItems',
-              ]),
-            },
-          ],
-        },
-      })
-      .compileComponents();
-  });
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(ColumnPickerComponent);
-    component = fixture.componentInstance;
-    baseColumnPicker = fixture.componentRef.injector.get(BASE_COLUMN_PICKER) as jest.Mocked<BaseColumnPicker>;
-    baseColumnPicker.registerTreeInstance.mockReturnValue({
-      api: {
-        getState: () => ({}),
-        setState: () => undefined,
-        select: () => undefined,
-        deselectAllNodes: () => undefined,
-      } as unknown as TreeAPI,
-      on: () => undefined,
-      off: () => undefined,
-    });
-  });
-
-  describe('ngOnChanges', () => {
-    it('should not update catalogue if this is the first change', () => {
-      baseColumnPicker.processCatalogueAsTree.mockReturnValue(catalogueAsTree);
-      expect(component.catalogue).toEqual([]);
-      const change = new SimpleChange(undefined, catalogue, false);
-
-      fixture.detectChanges();
-      component.ngOnChanges({ catalogue: change });
-      expect(component.catalogue).toEqual([]);
-    });
-
-    it('should update catalogue if this is not the first change', () => {
-      baseColumnPicker.processCatalogueAsTree.mockReturnValue(catalogueAsTree);
-      expect(component.catalogue).toEqual([]);
-      const change = new SimpleChange(undefined, catalogue, false);
-
-      fixture.detectChanges();
-      component.ngOnChanges({ catalogue: change });
-      expect(component.catalogueAsTree).toEqual(catalogueAsTree);
-    });
-
-    it('should update selectedPackets if selected columns are changed', fakeAsync(() => {
-      const selectedColumns = [
-        {
-          categoryId: 'CategoryA',
-          packetId: 'PacketA',
-          columns: ['columnA'],
-        },
-      ];
-
-      const selectedPackets = {
-        CategoryA: {
-          packets: [
-            {
-              packetId: 'PacketA',
-              include: ['columnA'],
-            },
-          ],
-        },
-      };
-
-      when(baseColumnPicker.generatePacketsFromSelectedColumns).calledWith(selectedColumns).mockReturnValue(selectedPackets);
-      expect(component.selectedPackets).toEqual({});
-      const change = new SimpleChange(undefined, selectedColumns, false);
-
-      fixture.detectChanges();
-      component.ngOnChanges({ selectedColumns: change });
-      expect(component.selectedPackets).toEqual(selectedPackets);
-    }));
-
-    it('should make sure selectedPackets has entries for anything in the catalogue if not already present', () => {
-      const selectedColumns = [
-        {
-          categoryId: 'CategoryA',
-          packetId: 'PacketA',
-          columns: ['columnA'],
-        },
-      ];
-
-      const selectedPackets = {
-        CategoryA: {
-          packets: [
-            {
-              packetId: 'PacketA',
-              include: ['columnA'],
-            },
-          ],
-        },
-      };
-
-      const additionalCatalogue = [
-        { categoryId: 'CategoryA', categoryName: 'Category A', packets: [] },
-        { categoryId: 'CategoryB', categoryName: 'Category B', packets: [{ packetId: 'ABC', packetName: 'Packet ABC', columns: [] }] },
-      ];
-
-      when(baseColumnPicker.generatePacketsFromSelectedColumns).calledWith(selectedColumns).mockReturnValue(selectedPackets);
-      component.catalogue = additionalCatalogue;
-      expect(component.selectedPackets).toEqual({});
-      const change = new SimpleChange(undefined, selectedColumns, false);
-
-      fixture.detectChanges();
-      component.ngOnChanges({ selectedColumns: change });
-      expect(component.selectedPackets).toEqual({
-        CategoryA: {
-          packets: [
-            {
-              packetId: 'PacketA',
-              include: ['columnA'],
-            },
-          ],
-        },
-        CategoryB: {
-          packets: [],
-        },
-      });
-    });
-  });
-
-  it('should not create a catalogue if no data passed in', () => {
-    baseColumnPicker.processCatalogueAsTree.mockReturnValue([]);
-    fixture.detectChanges();
-    expect(component.catalogueAsTree).toEqual([]);
-    expect(component.listItems).toEqual([]);
-    expect(component.hiddenCategories).toEqual({});
-  });
-
-  it('should convert a sent in catalogue into a format GS Tree understands', () => {
-    component.catalogue = catalogue;
-    baseColumnPicker.processCatalogueAsTree.mockReturnValue(catalogueAsTree);
-    fixture.detectChanges();
-    expect(component.catalogueAsTree).toEqual(catalogueAsTree);
-  });
-
-  it('should clear tree state and selected packets', () => {
-    fixture.detectChanges();
-    component.listItems = [
-      {
-        data: {
-          id: 'A',
-          includedColumns: [],
-        },
-        name: 'A',
-        id: 'A',
-      },
-    ];
-    component.selectedPackets = {
-      PacketA: {
-        packets: [
-          {
-            packetId: 'PacketA',
-            include: ['columnA'],
-          },
-        ],
-      },
-    };
-    component.treeInstances = [
-      {
-        api: {
-          deselectAllNodes: jest.fn(),
-        },
-      },
-    ] as unknown as TreeInstance[];
-
-    component.clearSelectedPackets();
-    expect(component.listItems).toEqual([]);
-    expect(component.selectedPackets).toEqual({ PacketA: { packets: [] } });
-    component.treeInstances.forEach((instance) => {
-      expect(instance.api.deselectAllNodes).toHaveBeenCalled();
-    });
-  });
-
-  it('should emit columns in the correct order', () => {
-    const columns = [
-      {
-        data: {
-          id: 'CategoryA|PacketA',
-          includedColumns: [],
-        },
-        id: 'a',
-        name: 'A',
-      },
-      {
-        data: {
-          id: 'CategoryB|PacketA',
-          includedColumns: [],
-        },
-        id: 'b',
-        name: 'B',
-      },
-      {
-        data: {
-          id: 'CategoryB|PacketB',
-          includedColumns: [],
-        },
-        id: 'c',
-        name: 'C',
-      },
-      {
-        id: 'd',
-        name: 'CorruptItemWithNoData',
-      },
-    ];
-    component.selectedPackets = {
-      CategoryA: {
-        packets: [{ packetId: 'PacketA', include: ['DefaultCol'] }],
-      },
-      CategoryB: {
-        packets: [{ packetId: 'PacketA', include: ['AnotherDefaultCol'] }, 'PacketB'],
-      },
-    };
-    component.listItems = columns;
-    (component as any).columnsChanged = { emit: jest.fn() } as any;
-    fixture.detectChanges();
-
-    component.columnsReordered(columns);
-
-    const expectedOutput = [
-      {
-        categoryId: 'CategoryA',
-        packetId: 'PacketA',
-        columns: ['DefaultCol'],
-      },
-      {
-        categoryId: 'CategoryB',
-        packetId: 'PacketA',
-        columns: ['AnotherDefaultCol'],
-      },
-      {
-        categoryId: 'CategoryB',
-        packetId: 'PacketB',
-      },
-    ];
-
-    when(baseColumnPicker.getSelectedColumnSetsInOrder).calledWith(component.listItems, component.selectedPackets).mockReturnValue(expectedOutput);
-    component.emitSelectedColumns();
-    expect(component.columnsChanged.emit).toHaveBeenCalledWith(expectedOutput);
-  });
-
-  it('should filter results down to search term', fakeAsync(() => {
-    component.catalogue = catalogue;
-    fixture.detectChanges();
-    component.treeInstances = [
-      {
-        api: {
-          getState: () => ({
-            'productIdentifiers|productIdentifiers|LongDescription': {
-              name: 'Description',
-              visible: true,
-            },
-          }),
-          setState: jest.fn(),
-        },
-      },
-      {
-        api: {
-          getState: () => ({
-            'basicAttributes|gshClassification|GSHLevel1': {
-              name: 'GSH L1',
-              visible: true,
-            },
-            'basicAttributes|gshClassification|GSHLevel2': {
-              name: 'GSH L2',
-              visible: true,
-            },
-            'basicAttributes|gshClassification|GSHLevel3': {
-              name: 'NOT L3',
-              visible: true,
-            },
-            'basicAttributes|gshClassification|GSHLevel4': {
-              name: 'NOT L3 BUT HAS GROUP',
-              childrenKeys: ['basicAttributes|gshClassification|GSHLevel1'],
-              visible: true,
-            },
-          }),
-          setState: jest.fn(),
-        },
-      },
-      {
-        api: {
-          getState: () => ({
-            'risk|xSectorFactorExpCTD': {
-              name: 'Risk Summary',
-              childrenKeys: ['risk|xSectorFactorExpCTD|GSHLevel3'],
-              visible: true,
-            },
-            'risk|xSectorFactorExpCTD|GSHLevel3': {
-              name: 'GSH L3',
-              visible: true,
-            },
-            'risk|x-sector': {
-              name: 'X-sector',
-              childrenKeys: ['risk|xSectorFactorExpCTD'],
-              visible: true,
-            },
-          }),
-          setState: jest.fn(),
-        },
-      },
-    ] as unknown as TreeInstance[];
-    component.treeFilterChanged('GSH');
-
-    // nothing should happen until 250ms after the last key press
-    expect(component.treeInstances[0].api.setState).not.toHaveBeenCalled();
-    expect(component.treeInstances[1].api.setState).not.toHaveBeenCalled();
-    // expect(component.treeInstances[2].api.setState).not.toHaveBeenCalled();
-    tick(250);
-
-    expect(component.treeInstances[0].api.setState).toHaveBeenCalledWith({
-      'productIdentifiers|productIdentifiers|LongDescription': {
-        name: 'Description',
-        visible: false,
-        expanded: false,
-      },
-    });
-    expect(component.treeInstances[1].api.setState).toHaveBeenCalledWith({
-      'basicAttributes|gshClassification|GSHLevel1': {
-        name: 'GSH L1',
-        visible: true,
-        expanded: false,
-      },
-      'basicAttributes|gshClassification|GSHLevel2': {
-        name: 'GSH L2',
-        visible: true,
-        expanded: false,
-      },
-      'basicAttributes|gshClassification|GSHLevel3': {
-        name: 'NOT L3',
-        visible: false,
-        expanded: false,
-      },
-      'basicAttributes|gshClassification|GSHLevel4': {
-        name: 'NOT L3 BUT HAS GROUP',
-        childrenKeys: ['basicAttributes|gshClassification|GSHLevel1'],
-        visible: true,
-        expanded: true,
-      },
-    });
-
-    expect(component.treeInstances[2].api.setState).toHaveBeenCalledWith({
-      'risk|xSectorFactorExpCTD': {
-        name: 'Risk Summary',
-        childrenKeys: ['risk|xSectorFactorExpCTD|GSHLevel3'],
-        visible: true,
-        expanded: true,
-      },
-      'risk|xSectorFactorExpCTD|GSHLevel3': {
-        name: 'GSH L3',
-        visible: true,
-        expanded: false,
-      },
-      'risk|x-sector': {
-        name: 'X-sector',
-        childrenKeys: ['risk|xSectorFactorExpCTD'],
-        visible: true,
-        expanded: true,
-      },
-    });
-    expect(component.hiddenCategories).toEqual({
-      productIdentifiers: true,
-      basicAttributes: false,
-      risk: false,
-    });
-
-    // we should reset if < 2 length term passed in
-    component.treeFilterChanged('a');
-    tick(250);
-    expect(component.hiddenCategories).toEqual({});
-    expect(component.treeInstances[0].api.setState).toHaveBeenCalledWith(undefined);
-    expect(component.treeInstances[1].api.setState).toHaveBeenCalledWith(undefined);
-
-    component.treeFilterChanged(undefined);
-    tick(250);
-    expect(component.hiddenCategories).toEqual({});
-    expect(component.treeInstances[0].api.setState).toHaveBeenCalledWith(undefined);
-    expect(component.treeInstances[1].api.setState).toHaveBeenCalledWith(undefined);
-  }));
-
-  it('should remove a packet from the tree state', () => {
-    fixture.detectChanges();
-
-    const treeInstance = {
-      api: {
-        getState: () => ({
-          'my|column|id': {
-            visible: true,
-          },
-        }),
-        select: jest.fn(),
-      },
-    } as any;
-    component.treeInstances = [treeInstance];
-
-    // should not invoke select if no data is provided
-    component.packetRemoved({ item: { id: 'a', name: 'My Column Packet' } });
-    expect(treeInstance.api.select).not.toHaveBeenCalled();
-
-    // should invoke select as my|column|id exists in the tree getState
-    component.packetRemoved({ item: { id: 'a', name: 'My Column Packet', data: { id: 'my|column|id', includedColumns: [] } } });
-    expect(treeInstance.api.select).toHaveBeenCalledWith('my|column|id');
-
-    // this shouldn't invoke select as this column id does not exist in the tree getState
-    component.packetRemoved({ item: { id: 'a', name: 'My Column Packet', data: { id: 'not|my|column|id', includedColumns: [] } } });
-    expect(treeInstance.api.select).not.toHaveBeenCalledWith('not|my|column|id');
-  });
-
-  it('should toggle overflow filter menu when clicked', () => {
-    component.catalogue = catalogue;
-    fixture.detectChanges();
-    component.toggleOverflowMenu();
-    expect(component.overflowDropdownVisible).toBeTruthy();
-
-    component.toggleOverflowMenu();
-    expect(component.overflowDropdownVisible).toBeFalsy();
-  });
-
-  it('should filter results on quick desk filter tags', fakeAsync(() => {
-    component.catalogue = catalogue;
-    component.catalogueAsTree = catalogueAsTree;
-    component.tags = ['All', 'FI IG', 'FI HY', 'FI EM', 'FI Sovs', 'FI Muni', 'Equities'];
-    fixture.detectChanges();
-    component.treeInstances = [
-      {
-        api: {
-          getState: () => ({
-            'productIdentifiers|productIdentifiers|LongDescription': {
-              childrenKeys: [],
-              name: 'Description',
-              key: 'productIdentifiers|productIdentifiers|LongDescription',
-              visible: true,
-            },
-          }),
-          setState: jest.fn(),
-        },
-      },
-      {
-        api: {
-          getState: () => ({
-            'esg|engagements|engagementsDataLY.numberOfFIEngagementsHeld': {
-              childrenKeys: [],
-              name: '# of Completed FI Engagements Last Year',
-              key: 'esg|engagements|engagementsDataLY.numberOfFIEngagementsHeld',
-              parentKey: 'esg|engagements',
-              visible: true,
-            },
-            'esg|engagements|engagementsDataTY.numberOfFIEngagementsHeld': {
-              childrenKeys: [],
-              name: '# of Completed FI Engagements This Year',
-              key: 'esg|engagements|engagementsDataTY.numberOfFIEngagementsHeld',
-              parentKey: 'esg|engagements',
-              visible: true,
-            },
-            'esg|engagements': {
-              childrenKeys: ['esg|engagements|engagementsDataLY.numberOfFIEngagementsHeld', 'esg|engagements|engagementsDataTY.numberOfFIEngagementsHeld'],
-              name: 'Engagements',
-              key: 'esg|engagements',
-              visible: true,
-            },
-          }),
-          setState: jest.fn(),
-        },
-      },
-      {
-        api: {
-          getState: () => ({
-            'researchLastUpdated|analystCommentaryIg|commentary.CORPORATE_ACTION.updatedTime': {
-              childrenKeys: [],
-              name: 'Corporate Action',
-              key: 'researchLastUpdated|analystCommentaryIg|commentary.CORPORATE_ACTION.updatedTime',
-              parentKey: 'researchLastUpdated|analystCommentaryIg',
-              visible: true,
-            },
-            'researchLastUpdated|analystCommentaryIg|commentary.STRESSED_OR_DISTRESSED.updatedTime': {
-              childrenKeys: [],
-              name: 'Stressed / Distressed',
-              key: 'researchLastUpdated|analystCommentaryIg|commentary.STRESSED_OR_DISTRESSED.updatedTime',
-              parentKey: 'researchLastUpdated|analystCommentaryIg',
-              visible: true,
-            },
-            'researchLastUpdated|analystCommentaryIg': {
-              childrenKeys: [
-                'researchLastUpdated|analystCommentaryIg|commentary.CORPORATE_ACTION.updatedTime',
-                'researchLastUpdated|analystCommentaryIg|commentary.STRESSED_OR_DISTRESSED.updatedTime',
-              ],
-              name: 'FI IG',
-              key: 'researchLastUpdated|analystCommentaryIg',
-              visible: true,
-            },
-            'researchLastUpdated|analystCommentaryHy|commentary.CORPORATE_ACTION.updatedTime': {
-              childrenKeys: [],
-              name: 'Corporate Action',
-              key: 'researchLastUpdated|analystCommentaryHy|commentary.CORPORATE_ACTION.updatedTime',
-              parentKey: 'researchLastUpdated|analystCommentaryHy',
-              visible: true,
-            },
-            'researchLastUpdated|analystCommentaryHy|commentary.COMPANY_OVERVIEW.updatedTime': {
-              childrenKeys: [],
-              name: 'Company Overview',
-              key: 'researchLastUpdated|analystCommentaryHy|commentary.COMPANY_OVERVIEW.updatedTime',
-              parentKey: 'researchLastUpdated|analystCommentaryHy',
-              visible: true,
-            },
-            'researchLastUpdated|analystCommentaryHy': {
-              childrenKeys: [
-                'researchLastUpdated|analystCommentaryHy|commentary.CORPORATE_ACTION.updatedTime',
-                'researchLastUpdated|analystCommentaryHy|commentary.COMPANY_OVERVIEW.updatedTime',
-              ],
-              name: 'FI HY',
-              key: 'researchLastUpdated|analystCommentaryHy',
-              visible: true,
-            },
-            'researchLastUpdated|analystCommentaryEm|commentary.CORPORATE_ACTION.updatedTime': {
-              childrenKeys: [],
-              name: 'Corporate Action',
-              key: 'researchLastUpdated|analystCommentaryEm|commentary.CORPORATE_ACTION.updatedTime',
-              parentKey: 'researchLastUpdated|analystCommentaryEm',
-              visible: true,
-            },
-            'researchLastUpdated|analystCommentaryEm|commentary.STRESSED_OR_DISTRESSED.updatedTime': {
-              childrenKeys: [],
-              name: 'Stressed / Distressed',
-              key: 'researchLastUpdated|analystCommentaryEm|commentary.STRESSED_OR_DISTRESSED.updatedTime',
-              parentKey: 'researchLastUpdated|analystCommentaryEm',
-              visible: true,
-            },
-            'researchLastUpdated|analystCommentaryEm': {
-              childrenKeys: [
-                'researchLastUpdated|analystCommentaryEm|commentary.CORPORATE_ACTION.updatedTime',
-                'researchLastUpdated|analystCommentaryEm|commentary.STRESSED_OR_DISTRESSED.updatedTime',
-              ],
-              name: 'FI EM',
-              key: 'researchLastUpdated|analystCommentaryEm',
-              visible: true,
-            },
-          }),
-          setState: jest.fn(),
-        },
-      },
-    ] as unknown as TreeInstance[];
-    component.switchQuickFilterTags('FI IG');
-
-    expect(component.treeInstances[0].api.setState).toHaveBeenCalledWith({
-      'productIdentifiers|productIdentifiers|LongDescription': {
-        childrenKeys: [],
-        expanded: false,
-        name: 'Description',
-        key: 'productIdentifiers|productIdentifiers|LongDescription',
-        visible: false,
-      },
-    });
-    expect(component.treeInstances[2].api.setState).toHaveBeenCalledWith({
-      'researchLastUpdated|analystCommentaryIg|commentary.CORPORATE_ACTION.updatedTime': {
-        childrenKeys: [],
-        name: 'Corporate Action',
-        key: 'researchLastUpdated|analystCommentaryIg|commentary.CORPORATE_ACTION.updatedTime',
-        parentKey: 'researchLastUpdated|analystCommentaryIg',
-        visible: false,
-        expanded: false,
-      },
-      'researchLastUpdated|analystCommentaryIg|commentary.STRESSED_OR_DISTRESSED.updatedTime': {
-        childrenKeys: [],
-        name: 'Stressed / Distressed',
-        key: 'researchLastUpdated|analystCommentaryIg|commentary.STRESSED_OR_DISTRESSED.updatedTime',
-        parentKey: 'researchLastUpdated|analystCommentaryIg',
-        visible: false,
-        expanded: false,
-      },
-      'researchLastUpdated|analystCommentaryIg': {
-        childrenKeys: [
-          'researchLastUpdated|analystCommentaryIg|commentary.CORPORATE_ACTION.updatedTime',
-          'researchLastUpdated|analystCommentaryIg|commentary.STRESSED_OR_DISTRESSED.updatedTime',
-        ],
-        name: 'FI IG',
-        key: 'researchLastUpdated|analystCommentaryIg',
-        visible: true,
-        expanded: false,
-      },
-      'researchLastUpdated|analystCommentaryHy|commentary.CORPORATE_ACTION.updatedTime': {
-        childrenKeys: [],
-        name: 'Corporate Action',
-        key: 'researchLastUpdated|analystCommentaryHy|commentary.CORPORATE_ACTION.updatedTime',
-        parentKey: 'researchLastUpdated|analystCommentaryHy',
-        visible: false,
-        expanded: false,
-      },
-      'researchLastUpdated|analystCommentaryHy|commentary.COMPANY_OVERVIEW.updatedTime': {
-        childrenKeys: [],
-        name: 'Company Overview',
-        key: 'researchLastUpdated|analystCommentaryHy|commentary.COMPANY_OVERVIEW.updatedTime',
-        parentKey: 'researchLastUpdated|analystCommentaryHy',
-        visible: false,
-        expanded: false,
-      },
-      'researchLastUpdated|analystCommentaryHy': {
-        childrenKeys: [
-          'researchLastUpdated|analystCommentaryHy|commentary.CORPORATE_ACTION.updatedTime',
-          'researchLastUpdated|analystCommentaryHy|commentary.COMPANY_OVERVIEW.updatedTime',
-        ],
-        name: 'FI HY',
-        key: 'researchLastUpdated|analystCommentaryHy',
-        visible: false,
-        expanded: false,
-      },
-      'researchLastUpdated|analystCommentaryEm|commentary.CORPORATE_ACTION.updatedTime': {
-        childrenKeys: [],
-        name: 'Corporate Action',
-        key: 'researchLastUpdated|analystCommentaryEm|commentary.CORPORATE_ACTION.updatedTime',
-        parentKey: 'researchLastUpdated|analystCommentaryEm',
-        visible: false,
-        expanded: false,
-      },
-      'researchLastUpdated|analystCommentaryEm|commentary.STRESSED_OR_DISTRESSED.updatedTime': {
-        childrenKeys: [],
-        name: 'Stressed / Distressed',
-        key: 'researchLastUpdated|analystCommentaryEm|commentary.STRESSED_OR_DISTRESSED.updatedTime',
-        parentKey: 'researchLastUpdated|analystCommentaryEm',
-        visible: false,
-        expanded: false,
-      },
-      'researchLastUpdated|analystCommentaryEm': {
-        childrenKeys: [
-          'researchLastUpdated|analystCommentaryEm|commentary.CORPORATE_ACTION.updatedTime',
-          'researchLastUpdated|analystCommentaryEm|commentary.STRESSED_OR_DISTRESSED.updatedTime',
-        ],
-        name: 'FI EM',
-        key: 'researchLastUpdated|analystCommentaryEm',
-        visible: false,
-        expanded: false,
-      },
-    });
-  }));
-});
-
-
-
-console.error
-    ERROR TypeError: Cannot read properties of undefined (reading 'length')
-        at ColumnPickerComponent_Template (ng:///ColumnPickerComponent.js:249:53)
-        at executeTemplate (C:\Developer\projects\analytics-web\node_modules\.pnpm\@angular+core@17.0.7_rxjs@7.8.1_zone.js@0.14.2\node_modules\@angular\core\fesm2022\core.mjs:12171:9)
-        at refreshView (C:\Developer\projects\analytics-web\node_modules\.pnpm\@angular+core@17.0.7_rxjs@7.8.1_zone.js@0.14.2\node_modules\@angular\core\fesm2022\core.mjs:13401:13)
-        at detectChangesInView (C:\Developer\projects\analytics-web\node_modules\.pnpm\@angular+core@17.0.7_rxjs@7.8.1_zone.js@0.14.2\node_modules\@angular\core\fesm2022\core.mjs:13626:9)
-        at detectChangesInViewWhileDirty (C:\Developer\projects\analytics-web\node_modules\.pnpm\@angular+core@17.0.7_rxjs@7.8.1_zone.js@0.14.2\node_modules\@angular\core\fesm2022\core.mjs:13342:5)
-        at detectChangesInternal (C:\Developer\projects\analytics-web\node_modules\.pnpm\@angular+core@17.0.7_rxjs@7.8.1_zone.js@0.14.2\node_modules\@angular\core\fesm2022\core.mjs:13322:9)
-        at ViewRef$1.detectChanges (C:\Developer\projects\analytics-web\node_modules\.pnpm\@angular+core@17.0.7_rxjs@7.8.1_zone.js@0.14.2\node_modules\@angular\core\fesm2022\core.mjs:13920:9)
-        at ColumnPickerComponent.transformIntoListItems (C:\Developer\projects\analytics-web\apps\metrics-ui\src\app\column-picker\column-picker.component.ts:306:13)
-        at ColumnPickerComponent.ngOnChanges (C:\Developer\projects\analytics-web\apps\metrics-ui\src\app\column-picker\column-picker.component.ts:164:12)
-        at C:\Developer\projects\analytics-web\apps\metrics-ui\src\app\column-picker\column-picker.component.spec.ts:149:17
-        at _ZoneDelegate.Object.<anonymous>._ZoneDelegate.invoke (C:\Developer\projects\analytics-web\node_modules\.pnpm\zone.js@0.14.2\node_modules\zone.js\bundles\zone.umd.js:411:30)
-        at ProxyZoneSpec.Object.<anonymous>.ProxyZoneSpec.onInvoke (C:\Developer\projects\analytics-web\node_modules\.pnpm\zone.js@0.14.2\node_modules\zone.js\bundles\zone-testing.umd.js:300:43)
-        at _ZoneDelegate.Object.<anonymous>._ZoneDelegate.invoke (C:\Developer\projects\analytics-web\node_modules\.pnpm\zone.js@0.14.2\node_modules\zone.js\bundles\zone.umd.js:410:56)
-        at Zone.Object.<anonymous>.Zone.run (C:\Developer\projects\analytics-web\node_modules\.pnpm\zone.js@0.14.2\node_modules\zone.js\bundles\zone.umd.js:165:47)
-        at Object.wrappedFunc (C:\Developer\projects\analytics-web\node_modules\.pnpm\zone.js@0.14.2\node_modules\zone.js\bundles\zone-testing.umd.js:789:34)
-        at Promise.then.completed (C:\Developer\projects\analytics-web\node_modules\.pnpm\jest-circus@29.6.2\node_modules\jest-circus\build\utils.js:300:28)
-        at new Promise (<anonymous>)
-        at callAsyncCircusFn (C:\Developer\projects\analytics-web\node_modules\.pnpm\jest-circus@29.6.2\node_modules\jest-circus\build\utils.js:233:10)
-        at _callCircusTest (C:\Developer\projects\analytics-web\node_modules\.pnpm\jest-circus@29.6.2\node_modules\jest-circus\build\run.js:315:40)
-        at processTicksAndRejections (node:internal/process/task_queues:95:5)
-        at async _runTest (C:\Developer\projects\analytics-web\node_modules\.pnpm\jest-circus@29.6.2\node_modules\jest-circus\build\run.js:251:3)
-        at async _runTestsForDescribeBlock (C:\Developer\projects\analytics-web\node_modules\.pnpm\jest-circus@29.6.2\node_modules\jest-circus\build\run.js:125:9)
-        at async _runTestsForDescribeBlock (C:\Developer\projects\analytics-web\node_modules\.pnpm\jest-circus@29.6.2\node_modules\jest-circus\build\run.js:120:9)
-        at async _runTestsForDescribeBlock (C:\Developer\projects\analytics-web\node_modules\.pnpm\jest-circus@29.6.2\node_modules\jest-circus\build\run.js:120:9)
-        at async run (C:\Developer\projects\analytics-web\node_modules\.pnpm\jest-circus@29.6.2\node_modules\jest-circus\build\run.js:70:3)
-        at async runAndTransformResultsToJestFormat (C:\Developer\projects\analytics-web\node_modules\.pnpm\jest-circus@29.6.2\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
-
-      304 |     this.listItems = this.columnPickerImpl.orderSelectedPacketsIntoListItems(selectedPackets, this.columnOrdered);
-      305 |     this.columnOrdered = this.listItems;
-    > 306 |     this.cd.detectChanges();
-          |             ^
-      307 |   }
-      308 |
-      309 |   private analyticsCallback(callbackEvent: { type: string; identifiers: { categoryId: string; packetId: string; columnId?: string } }): void {
-
-      at ErrorHandler.handleError (../../node_modules/.pnpm/@angular+core@17.0.7_rxjs@7.8.1_zone.js@0.14.2/node_modules/@angular/core/fesm2022/core.mjs:11751:23)
-      at handleError (../../node_modules/.pnpm/@angular+core@17.0.7_rxjs@7.8.1_zone.js@0.14.2/node_modules/@angular/core/fesm2022/core.mjs:13272:34)
-      at detectChangesInternal (../../node_modules/.pnpm/@angular+core@17.0.7_rxjs@7.8.1_zone.js@0.14.2/node_modules/@angular/core/fesm2022/core.mjs:13326:13)
-      at ViewRef$1.detectChanges (../../node_modules/.pnpm/@angular+core@17.0.7_rxjs@7.8.1_zone.js@0.14.2/node_modules/@angular/core/fesm2022/core.mjs:13920:9)
-      at ColumnPickerComponent.transformIntoListItems (src/app/column-picker/column-picker.component.ts:306:13)
-      at ColumnPickerComponent.ngOnChanges (src/app/column-picker/column-picker.component.ts:164:12)
-      at src/app/column-picker/column-picker.component.spec.ts:149:17
-
 
 
 <div class="row column-picker h-100">
