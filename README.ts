@@ -110,3 +110,47 @@ export class OverflowButtonsComponent {
     this.overflowDropdownVisible = shouldBlurElementBeVisible(this.overflowDropdownVisible, $event, this.dropdownButtonRef);
   }
 }
+
+
+
+
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { OverflowButtonsComponent } from './overflow-buttons.component';
+
+describe('OverflowButtonsComponent', () => {
+  let component: OverflowButtonsComponent;
+  let fixture: ComponentFixture<OverflowButtonsComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      declarations: [OverflowButtonsComponent]
+    })
+    .compileComponents();
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(OverflowButtonsComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create the component', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should emit callFilterTreeInstance event when switchQuickFilterTags method is called', () => {
+    const tag = 'Tag1';
+    spyOn(component.callFilterTreeInstance, 'emit');
+    component.switchQuickFilterTags(tag);
+    expect(component.callFilterTreeInstance.emit).toHaveBeenCalledWith(tag);
+  });
+
+  it('should toggle overflowDropdownVisible when toggleOverflowMenu method is called', () => {
+    const initialValue = component.overflowDropdownVisible;
+    component.toggleOverflowMenu();
+    expect(component.overflowDropdownVisible).toEqual(!initialValue);
+  });
+
+  // Add more test cases as needed
+});
+
