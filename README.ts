@@ -1,3 +1,46 @@
+[
+    {
+        "packets": [
+            {
+                "packetName": "Product Identifiers",
+                "pinned": true,
+                "packetId": "productIdentifiers",
+                "tags": [
+                    "FI IG",
+                    "FI HY",
+                    "FI EM"
+                ]
+            }
+        ],
+        "categoryName": "Product Identifiers",
+        "categoryId": "productIdentifiers",
+    },
+    {
+        "packets": [
+            {
+                "columns": [],
+                "packetName": "Account Positioning",
+                "pinned": false,
+                "packetId": "accountPositioning",
+                "tags": [
+                    "FI IG",
+                    "FI HY",
+                    "FI EM"
+                ]
+            }
+        ],
+        "categoryName": "Account Positioning",
+        "categoryId": "accountPositioning",
+        "hidden": true,
+        "titles": {
+            "Account Positioning": [
+                "accountPositioning"
+            ]
+        }
+    }
+]
+
+
 <div class="row mt-2 mb-3 g-0 flex-nowrap" metricsDetectOverflow [reservedWidth]="100"
 (overflowingElementIndex)="overflowingTabs($event)">
     @for(tag of tags; track $index; let isFirst = $first){
