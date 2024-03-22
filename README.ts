@@ -1,3 +1,7 @@
+<gs-checkbox _ngcontent-ng-c9982543="" data-gs-uitk-component="checkbox" size="sm" data-size="sm" data-label-placement="right" class="gs-checkbox gs-uitk-c-1xshiws ng-star-inserted"><gs-label data-gs-uitk-component="label" data-cy="gs-uitk-checkbox__label" data-size="sm" class="gs-label gs-uitk-c-0"><label data-cy="gs-uitk-label" class="gs-checkbox__label gs-label__label gs-uitk-c-1h2g7x"><span data-cy="gs-uitk-checkbox__container" class="gs-checkbox__container gs-uitk-c-s7mngh"><input type="checkbox" data-cy="gs-uitk-checkbox__input" class="gs-checkbox__input gs-uitk-c-165ttyl" value="bmk" disabled="true"><span data-cy="gs-uitk-checkbox__inner" class="gs-checkbox__inner gs-uitk-c-1ibs2h7"></span></span><span data-cy="gs-uitk-checkbox__children" class="gs-checkbox__children gs-uitk-c-16zo6al">Benchmark </span></label></gs-label></gs-checkbox>
+
+
+
 import { OnChanges, OnDestroy, EventEmitter, ElementRef, SimpleChanges, ApplicationRef, ChangeDetectorRef, ComponentFactoryResolver, Injector, AfterViewInit } from '@angular/core';
 import { TreeInstance, TreeProps, TreeFilterablePlugin } from './common-src';
 import { ThemeService } from '@gs-ux-uitoolkit-angular/theme';
