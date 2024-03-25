@@ -1,3 +1,119 @@
+callFilterTreeInstance(value: string, eventName?: string, treeEvent?: TreeExpandEvent, expandArr?: ((ColumnPacket & { categoryId: string; columnId?: string }) | undefined)[]): void {
+    if (eventName === 'overflow') {
+      this.activeTag = value;
+      value = this.activeTag === 'All' ? '' : value;
+      this.searchText = '';
+      this.analytics.event(AnalyticsEvents.CLICK_QUICK_DESK_FILTER, { [AnalyticsProperties.QUICK_DESK_FILTER]: value });
+    } else {
+      this.searchText = value;
+    }
+
+    console.log(expandArr);
+
+    if (this.activeTag === 'All' && (!value?.length || value.length < 2)) {
+      this.treeInstances.forEach((instance, position) => {
+        const state = this.originalTreeState[position];
+        instance.api.setState(state);
+      });
+
+      this.hiddenCategories = {};
+      this.analytics.event(AnalyticsEvents.RESET_SEARCH_COLUMNS, {});
+
+      return;
+    }
+
+    if(eventName === 'expand' && this.searchText.length > 1){
+      return;
+    }
+
+    if (this.activeTag !== 'All') {
+      this.treeInstances.forEach((instance) => {
+        let category = '';
+        const api = instance.api;
+        const searchState = { ...api.getState() } as Record<
+          string,
+          TreeNode & { expanded: boolean; visible: boolean; childrenKeys: string[]; parentKey: string | undefined; }
+        >;
+        Object.keys(searchState).forEach((key) => {
+          let visible = true;
+          category = first(key.split('|')) || '';
+          let hasChildren = false;
+          if (searchState[key].href?.includes(`|${this.activeTag}|`)) {
+            if (this.searchText.length > 1) {
+              hasChildren = some(
+                searchState[key].childrenKeys,
+                (child) =>
+                  (searchState[child].href?.includes(`|${this.activeTag}|`) && searchState[child].name.toLowerCase().includes(this.searchText.toLowerCase())) ||
+                  searchState[child].childrenKeys.some((cName) => searchState[cName].href?.includes(`|${this.activeTag}|`) && searchState[cName].name.toLowerCase().includes(this.searchText.toLowerCase())),
+              );
+            } else {
+              hasChildren = some(searchState[key].childrenKeys, (child) =>
+                treeEvent?.itemKey === key && searchState[child].href?.includes(`|${this.activeTag}|`) ||
+                searchState[child].childrenKeys.some((cName) => searchState[cName].href?.includes(`|${this.activeTag}|`)),
+              );
+            }
+
+            if (this.searchText.length > 1 && !searchState[key].name.toLowerCase().includes(this.searchText.toLowerCase()) && !hasChildren) {
+              visible = false;
+            } else if (this.searchText.length <= 1 && !hasChildren && searchState[key].childrenKeys.length === 0) {
+              if(!key.includes(String(treeEvent?.itemKey))){
+                visible = false;
+              }
+            }
+          } else {
+            visible = false;
+          }
+
+          searchState[key] = {
+            ...searchState[key],
+            visible,
+            expanded: hasChildren,
+          };
+        });
+        console.log(searchState);
+        this.hiddenCategories[category] = every(searchState, { visible: false });
+        api.setState(searchState);
+      });
+    } else {
+      this.treeInstances.forEach((instance) => {
+        let category = '';
+        const api = instance.api;
+        const searchState = { ...api.getState() } as Record<
+          string,
+          TreeNode & { expanded: boolean; visible: boolean; childrenKeys: string[]; parentKey: string | undefined }
+        >;
+        Object.keys(searchState).forEach((key) => {
+          let visible = true;
+          category = first(key.split('|')) || '';
+          const hasChildren = some(
+            searchState[key].childrenKeys,
+            (child) =>
+              searchState[child].name.toLowerCase().includes(value.toLowerCase()) ||
+              searchState[child].childrenKeys.some((cName) => searchState[cName].name.toLowerCase().includes(value.toLowerCase())),
+          );
+
+          if (!searchState[key].name.toLowerCase().includes(value.toLowerCase()) && !hasChildren) {
+              visible = false;
+          }
+
+          searchState[key] = {
+            ...searchState[key],
+            visible,
+            expanded: hasChildren,
+          };
+        });
+
+        this.hiddenCategories[category] = every(searchState, { visible: false });
+        api.setState(searchState);
+      });
+    }
+
+    this.analytics.event(AnalyticsEvents.SEARCH_COLUMNS, { [AnalyticsProperties.SEARCH_TERM]: value.toLowerCase() });
+  }
+
+
+
+
 <gs-checkbox _ngcontent-ng-c9982543="" data-gs-uitk-component="checkbox" size="sm" data-size="sm" data-label-placement="right" class="gs-checkbox gs-uitk-c-1xshiws ng-star-inserted"><gs-label data-gs-uitk-component="label" data-cy="gs-uitk-checkbox__label" data-size="sm" class="gs-label gs-uitk-c-0"><label data-cy="gs-uitk-label" class="gs-checkbox__label gs-label__label gs-uitk-c-1h2g7x"><span data-cy="gs-uitk-checkbox__container" class="gs-checkbox__container gs-uitk-c-s7mngh"><input type="checkbox" data-cy="gs-uitk-checkbox__input" class="gs-checkbox__input gs-uitk-c-165ttyl" value="bmk" disabled="true"><span data-cy="gs-uitk-checkbox__inner" class="gs-checkbox__inner gs-uitk-c-1ibs2h7"></span></span><span data-cy="gs-uitk-checkbox__children" class="gs-checkbox__children gs-uitk-c-16zo6al">Benchmark </span></label></gs-label></gs-checkbox>
 
 
