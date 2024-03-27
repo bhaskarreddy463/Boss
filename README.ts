@@ -1,43 +1,46 @@
-this.store$
-      .pipe(
-        select(getActiveView),
-        switchMap((view) =>
-          this.store$.pipe(
-            select(getAccounts),
-            map((accounts): [ViewState | undefined, Record<string, State['accounts'][0]>] => [view, accounts]),
-          ),
-        ),
-        takeUntil(this.destroy$),
-      )
-      .subscribe(([view, accountsState]) => {
-        if (!view || DashboardType.THREE_SIXTY !== view.type) {
-          return;
-        }
+<div class="row mt-2 mb-3 g-0 flex-nowrap" metricsDetectOverflow [reservedWidth]="100"
+(overflowingElementIndex)="overflowingTabs($event)">
+    @for(tag of tags; track $index; let isFirst = $first){
+        <div class="col-auto me-1" [class.ms-1]="!isFirst"
+        [class.d-none]="!packetsToRender.includes(tag)">
+            <gs-button #button (click)="switchQuickFilterTags(tag, button)" size="sm" shape="circle" class="metrics-button" emphasis="subtle"
+                [actionType]="tag === activeTag ? 'primary' : 'secondary'">
+                {{ tag }}
+            </gs-button>
+        </div>
+    }
+    @if(overflowMenu.length){
+        <div class="col-auto ms-1">
+            <gs-dropdown size="sm" [menuVisible]="overflowDropdownVisible">
+            <gs-button #overflowButton size="sm" shape="circle" size="sm" emphasis="subtle" class="metrics-button"
+                [actionType]="overflowMenu.includes(activeTag) ? 'primary' : 'secondary'"
+                (click)="toggleOverflowMenu()">More
+                <gs-icon type="filled" role="img" size="md" [name]="overflowDropdownVisible ? 'expand-less' : 'expand-more'">
+                </gs-icon></gs-button>
+            <gs-dropdown-menu (change)="switchFilterViaMenu($event, overflowButton)" (blur)="blur($event)">
+                @for (item of overflowMenu; track $index) {
+                    <gs-menu-option [value]="item">
+                    <div class="row g-0 m-0"><span class="col-auto">{{ item }}</span>
+                        <gs-icon class="ms-auto col-auto gs-blue060-link" size="sm" type="outlined" name="check"
+                        *ngIf="item === activeTag"></gs-icon>
+                    </div>
+                    </gs-menu-option>
+                }
+            </gs-dropdown-menu>
+            </gs-dropdown>
+        </div>
+    }
+</div>
 
-        this.view = view;
-
-        const dateChanged = this.selectedRiskDate !== view.query?.riskDate;
-        this.selectedAccount = { ...(view.datasets.accounts[0] || {}), viewId: this.view.id };
-
-        if (dateChanged) {
-          this.selectedRiskDate = view.query?.riskDate;
-          this.selectedAccount = { ...this.selectedAccount, riskDate: this.selectedRiskDate };
-        }
-
-        // has this account ever been loaded?
-        if ((!accountsState[this.selectedAccount.invest1Id] || dateChanged) && this.selectedAccount.invest1Id) {
-          this.dispatchAccountQuery(this.selectedAccount, this.selectedRiskDate);
-        }
-
-        if (this.selectedDatasets.accounts[0] !== this.selectedAccount) {
-          const accounts = this.selectedAccount?.invest1Id ? [this.selectedAccount] : [];
-          this.selectedDatasets = { accounts, accountGroups: [], analysts: [], benchmarks: [] };
-        }
-
-        // relative date updater at midnight
-        const timeUntilMidnight = DateTime.now().set({ hour: 24, minute: 0, second: 0 }).toMillis() - DateTime.now().toMillis();
-        timer(timeUntilMidnight).subscribe(() => this.updateRelativeDateAtMidnight());
-
-        this.asOfTime = DateTime.now();
-        this.updateRelativeDateAtMidnight();
-      });
+<div class="col">
+    <gs-card class="h-100 d-block">
+        <gs-card-header size="sm" class="row g-0 mt-2 mb-0 ms-2">
+            <h6 class="col gs-uitk-text-heading-07 font-weight-bold mt-0 pt-2 px-0">
+              Portfolio Composition
+            </h6>
+          </gs-card-header>    
+          <gs-card-body class="px-0 pb-0 pt-1">
+            <metrics-overflow-buttons [tags]="btnList"></metrics-overflow-buttons>
+          </gs-card-body>
+    </gs-card>
+</div>
